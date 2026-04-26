@@ -18,7 +18,7 @@ export default async function ProductsPage({
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <SectionHeader title="Products" eyebrow="Catalog">
-        <Link href="/products" className="text-sm font-semibold text-teal-700 hover:text-teal-900">
+        <Link href="/products" className="text-sm font-semibold text-teal-700 hover:text-teal-900 dark:text-teal-300 dark:hover:text-teal-200">
           Clear filter
         </Link>
       </SectionHeader>
@@ -29,7 +29,9 @@ export default async function ProductsPage({
             key={item.id}
             href={`/products?category=${item.slug}`}
             className={`whitespace-nowrap rounded-md border px-3 py-2 text-sm font-medium ${
-              item.slug === category ? "border-teal-700 bg-teal-50 text-teal-800" : "border-slate-200 bg-white text-slate-700"
+              item.slug === category
+                ? "border-teal-700 bg-teal-50 text-teal-800 dark:border-teal-400 dark:bg-teal-950 dark:text-teal-200"
+                : "border-slate-200 bg-white text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
             }`}
           >
             {item.name}

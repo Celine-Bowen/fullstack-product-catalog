@@ -1,8 +1,16 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
   --foreground: #0f172a;
+}
+
+.dark {
+  --background: #020617;
+  --foreground: #e2e8f0;
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -23,4 +31,10 @@ input,
 select,
 textarea {
   font: inherit;
+}
+
+input,
+select,
+textarea {
+  background: transparent;
 }

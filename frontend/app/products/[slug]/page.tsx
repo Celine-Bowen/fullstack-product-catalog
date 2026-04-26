@@ -24,19 +24,19 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         <div className="min-h-80 rounded-lg bg-[linear-gradient(135deg,#dbeafe_0%,#fef3c7_48%,#dcfce7_100%)]" />
         <div className="space-y-6">
           <SectionHeader title={product.name} eyebrow={product.category?.name ?? "Product"} />
-          <p className="text-base leading-7 text-slate-600">{product.description}</p>
+          <p className="text-base leading-7 text-slate-600 dark:text-slate-300">{product.description}</p>
           <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-lg border border-slate-200 p-4">
-              <p className="text-sm text-slate-500">Price</p>
-              <p className="mt-1 text-lg font-semibold text-slate-950">{formatPrice(product.price)}</p>
+            <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-800 dark:bg-slate-900">
+              <p className="text-sm text-slate-500 dark:text-slate-400">Price</p>
+              <p className="mt-1 text-lg font-semibold text-slate-950 dark:text-slate-50">{formatPrice(product.price)}</p>
             </div>
-            <div className="rounded-lg border border-slate-200 p-4">
-              <p className="text-sm text-slate-500">Rating</p>
-              <p className="mt-1 text-lg font-semibold text-slate-950">{formatRating(product.average_rating)}</p>
+            <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-800 dark:bg-slate-900">
+              <p className="text-sm text-slate-500 dark:text-slate-400">Rating</p>
+              <p className="mt-1 text-lg font-semibold text-slate-950 dark:text-slate-50">{formatRating(product.average_rating)}</p>
             </div>
-            <div className="rounded-lg border border-slate-200 p-4">
-              <p className="text-sm text-slate-500">Stock</p>
-              <p className="mt-1 text-lg font-semibold text-slate-950">{product.stock_qty}</p>
+            <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-800 dark:bg-slate-900">
+              <p className="text-sm text-slate-500 dark:text-slate-400">Stock</p>
+              <p className="mt-1 text-lg font-semibold text-slate-950 dark:text-slate-50">{product.stock_qty}</p>
             </div>
           </div>
         </div>
@@ -46,12 +46,12 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         <SectionHeader title="Approved reviews" />
         <div className="mt-5 grid gap-4 md:grid-cols-2">
           {(product.reviews ?? []).map((review) => (
-            <article key={review.id} className="rounded-lg border border-slate-200 bg-white p-5">
+            <article key={review.id} className="rounded-lg border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
               <div className="flex items-center justify-between gap-3">
-                <h2 className="font-semibold text-slate-950">{review.reviewer_name}</h2>
-                <span className="text-sm text-slate-600">{review.rating} / 5</span>
+                <h2 className="font-semibold text-slate-950 dark:text-slate-50">{review.reviewer_name}</h2>
+                <span className="text-sm text-slate-600 dark:text-slate-300">{review.rating} / 5</span>
               </div>
-              <p className="mt-3 text-sm leading-6 text-slate-600">{review.body}</p>
+              <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">{review.body}</p>
             </article>
           ))}
         </div>

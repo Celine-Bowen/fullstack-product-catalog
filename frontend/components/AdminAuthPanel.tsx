@@ -77,25 +77,25 @@ export function AdminAuthPanel({ apiBase, session, onAuthenticated, onLogout, ch
 
   if (!session) {
     return (
-      <form onSubmit={submitLogin} className="grid gap-4 rounded-lg border border-slate-200 bg-white p-4 md:grid-cols-[1fr_1fr_auto] md:items-end">
+      <form onSubmit={submitLogin} className="grid gap-4 rounded-lg border border-slate-200 bg-white p-4 md:grid-cols-[1fr_1fr_auto] md:items-end dark:border-slate-800 dark:bg-slate-900">
         <label className="space-y-1">
-          <span className="text-sm font-medium text-slate-700">Email</span>
+          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Email</span>
           <input
             type="email"
             value={form.email}
             onChange={(event) => setForm((values) => ({ ...values, email: event.target.value }))}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
             autoComplete="username"
             required
           />
         </label>
         <label className="space-y-1">
-          <span className="text-sm font-medium text-slate-700">Password</span>
+          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Password</span>
           <input
             type="password"
             value={form.password}
             onChange={(event) => setForm((values) => ({ ...values, password: event.target.value }))}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
             autoComplete="current-password"
             required
           />
@@ -103,20 +103,20 @@ export function AdminAuthPanel({ apiBase, session, onAuthenticated, onLogout, ch
         <button className="rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800 disabled:opacity-60" type="submit" disabled={isSubmitting}>
           {isSubmitting ? "Signing in..." : "Sign in"}
         </button>
-        {error ? <p className="text-sm text-red-700 md:col-span-3">{error}</p> : null}
+        {error ? <p className="text-sm text-red-700 md:col-span-3 dark:text-red-300">{error}</p> : null}
       </form>
     );
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-4 lg:flex-row lg:items-center lg:justify-between">
+    <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-4 lg:flex-row lg:items-center lg:justify-between dark:border-slate-800 dark:bg-slate-900">
       <div>
-        <p className="text-sm font-medium text-slate-950">{session.user.name}</p>
-        <p className="text-xs text-slate-500">{session.user.email}</p>
+        <p className="text-sm font-medium text-slate-950 dark:text-slate-50">{session.user.name}</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400">{session.user.email}</p>
       </div>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         {children}
-        <button className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 disabled:opacity-60" type="button" onClick={logout} disabled={isLoggingOut}>
+        <button className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800" type="button" onClick={logout} disabled={isLoggingOut}>
           {isLoggingOut ? "Signing out..." : "Sign out"}
         </button>
       </div>

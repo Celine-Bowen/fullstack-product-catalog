@@ -22,7 +22,7 @@ export default async function CategoryDetailPage({ params }: { params: Promise<{
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <SectionHeader title={category.name} eyebrow="Category" />
-      <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">{category.description}</p>
+      <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600 dark:text-slate-300">{category.description}</p>
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {(category.products ?? []).map((product) => (
           <ProductCard key={product.id} product={{ ...product, category }} />

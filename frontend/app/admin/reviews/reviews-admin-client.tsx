@@ -123,7 +123,7 @@ export function ReviewsAdminClient() {
     <div className="mt-6 space-y-6">
       <div className="fixed right-4 top-4 z-50 w-[min(24rem,calc(100vw-2rem))] space-y-2">
         {toasts.map((toast) => (
-          <div key={toast.id} className={`flex items-start justify-between gap-3 rounded-md border px-4 py-3 text-sm shadow-sm ${toast.type === "success" ? "border-teal-200 bg-teal-50 text-teal-900" : "border-red-200 bg-red-50 text-red-900"}`}>
+          <div key={toast.id} className={`flex items-start justify-between gap-3 rounded-md border px-4 py-3 text-sm shadow-sm ${toast.type === "success" ? "border-teal-200 bg-teal-50 text-teal-900 dark:border-teal-900 dark:bg-teal-950 dark:text-teal-100" : "border-red-200 bg-red-50 text-red-900 dark:border-red-900 dark:bg-red-950 dark:text-red-100"}`}>
             <span>{toast.message}</span>
             <button className="font-semibold" type="button" onClick={() => setToasts((items) => items.filter((item) => item.id !== toast.id))}>
               Close
@@ -141,7 +141,7 @@ export function ReviewsAdminClient() {
         }}
         onLogout={logout}
       >
-        <button className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 disabled:opacity-60" type="button" onClick={() => loadReviews()} disabled={isLoading}>
+        <button className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800" type="button" onClick={() => loadReviews()} disabled={isLoading}>
           {isLoading ? "Loading..." : "Load reviews"}
         </button>
       </AdminAuthPanel>
@@ -149,11 +149,11 @@ export function ReviewsAdminClient() {
       {!session ? null : (
         <>
 
-      <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+      <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
         <table className="min-w-[56rem] divide-y divide-slate-200 text-sm">
-          <thead className="bg-slate-50 text-left text-slate-600">
+          <thead className="bg-slate-50 text-left text-slate-600 dark:bg-slate-900 dark:text-slate-300">
             <tr>
-              <th className="sticky left-0 z-20 w-48 min-w-48 bg-slate-50 px-3 py-3 shadow-[1px_0_0_#e2e8f0] sm:px-4">Reviewer</th>
+              <th className="sticky left-0 z-20 w-48 min-w-48 bg-slate-50 px-3 py-3 shadow-[1px_0_0_#e2e8f0] sm:px-4 dark:bg-slate-900 dark:shadow-[1px_0_0_#1e293b]">Reviewer</th>
               <th className="px-3 py-3 sm:px-4">Product</th>
               <th className="px-3 py-3 sm:px-4">Rating</th>
               <th className="px-3 py-3 sm:px-4">Status</th>
@@ -164,18 +164,18 @@ export function ReviewsAdminClient() {
           <tbody className="divide-y divide-slate-100">
             {reviews.map((review) => (
               <tr key={review.id}>
-                <td className="sticky left-0 z-10 w-48 min-w-48 bg-white px-3 py-3 shadow-[1px_0_0_#e2e8f0] sm:px-4">
-                  <p className="font-medium text-slate-950">{review.reviewer_name}</p>
-                  <p className="text-xs text-slate-500">{review.email}</p>
+                <td className="sticky left-0 z-10 w-48 min-w-48 bg-white px-3 py-3 shadow-[1px_0_0_#e2e8f0] sm:px-4 dark:bg-slate-900 dark:shadow-[1px_0_0_#1e293b]">
+                  <p className="font-medium text-slate-950 dark:text-slate-50">{review.reviewer_name}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{review.email}</p>
                 </td>
                 <td className="px-3 py-3 sm:px-4">{review.product?.name ?? review.product_id}</td>
                 <td className="px-3 py-3 sm:px-4">{review.rating} / 5</td>
                 <td className="px-3 py-3 sm:px-4">
-                  <span className={`rounded-full px-2 py-1 text-xs font-medium ${review.is_approved ? "bg-teal-50 text-teal-800" : "bg-amber-50 text-amber-800"}`}>
+                  <span className={`rounded-full px-2 py-1 text-xs font-medium ${review.is_approved ? "bg-teal-50 text-teal-800 dark:bg-teal-950 dark:text-teal-200" : "bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-200"}`}>
                     {review.is_approved ? "Approved" : "Pending"}
                   </span>
                 </td>
-                <td className="max-w-sm px-3 py-3 text-slate-600 sm:px-4">{review.body}</td>
+                <td className="max-w-sm px-3 py-3 text-slate-600 sm:px-4 dark:text-slate-300">{review.body}</td>
                 <td className="space-x-2 px-3 py-3 sm:px-4">
                   <button className="font-medium text-teal-700 disabled:text-slate-400" type="button" disabled={review.is_approved} onClick={() => setApproval(review, true)}>
                     Approve
