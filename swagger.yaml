@@ -1,0 +1,877 @@
+openapi: 3.1.0
+info:
+  title: Fullstack Product Catalog API
+  version: 1.0.0
+  description: Laravel REST API for catalog browsing, admin product/category management, and review moderation.
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Local Docker backend
+tags:
+  - name: Health
+  - name: Auth
+  - name: Categories
+  - name: Products
+  - name: Reviews
+security: []
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Check API health
+      responses:
+        "200":
+          description: API is available.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              example: no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Sign in and issue a Sanctum bearer token
+      description: Limited to 5 requests per minute.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login succeeded.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              example: no-store
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Revoke the current Sanctum token
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Logged out.
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+
+  /categories:
+    get:
+      tags: [Categories]
+      summary: List categories
+      parameters:
+        - $ref: "#/components/parameters/Page"
+      responses:
+        "200":
+          description: Paginated category list.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              example: public, max-age=300
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PaginatedResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Category"
+    post:
+      tags: [Categories]
+      summary: Create a category
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryWrite"
+      responses:
+        "201":
+          description: Category created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoryResource"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /categories/{category}:
+    parameters:
+      - $ref: "#/components/parameters/CategorySlug"
+    get:
+      tags: [Categories]
+      summary: Get a category by slug
+      responses:
+        "200":
+          description: Category detail with published products when loaded by the API.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              example: public, max-age=300
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoryResource"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags: [Categories]
+      summary: Update a category
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryPatch"
+      responses:
+        "200":
+          description: Category updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoryResource"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    put:
+      tags: [Categories]
+      summary: Replace a category
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryPatch"
+      responses:
+        "200":
+          description: Category updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoryResource"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    delete:
+      tags: [Categories]
+      summary: Delete a category
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Category deleted.
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /products:
+    get:
+      tags: [Products]
+      summary: List products
+      description: Public requests return published products only. Authenticated requests may set include_unpublished=true.
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - name: category
+          in: query
+          schema:
+            type: string
+          description: Filter by category slug.
+          example: wellness-essentials
+        - name: include_unpublished
+          in: query
+          schema:
+            type: boolean
+          description: Include drafts when authenticated.
+      responses:
+        "200":
+          description: Paginated product list.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              examples:
+                public:
+                  value: public, max-age=60
+                private:
+                  value: private, max-age=60
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PaginatedResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Product"
+    post:
+      tags: [Products]
+      summary: Create a product
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductWrite"
+      responses:
+        "201":
+          description: Product created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductResource"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /products/{product}:
+    parameters:
+      - $ref: "#/components/parameters/ProductSlug"
+    get:
+      tags: [Products]
+      summary: Get a product by slug
+      description: Draft products are only visible to authenticated requests.
+      responses:
+        "200":
+          description: Product detail.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              example: public, max-age=60
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductResource"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags: [Products]
+      summary: Update a product
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductPatch"
+      responses:
+        "200":
+          description: Product updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductResource"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    put:
+      tags: [Products]
+      summary: Replace a product
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductPatch"
+      responses:
+        "200":
+          description: Product updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductResource"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    delete:
+      tags: [Products]
+      summary: Delete a product
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Product deleted.
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /reviews:
+    get:
+      tags: [Reviews]
+      summary: List reviews
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+      responses:
+        "200":
+          description: Paginated review list.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              example: private, max-age=60
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PaginatedResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Review"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+    post:
+      tags: [Reviews]
+      summary: Submit a public review
+      description: Public endpoint. Limited to 5 requests per minute per IP. Reviews are stored as unapproved.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewWrite"
+      responses:
+        "201":
+          description: Review submitted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewResource"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+
+  /reviews/{review}:
+    parameters:
+      - $ref: "#/components/parameters/ReviewId"
+    get:
+      tags: [Reviews]
+      summary: Get a review
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Review detail.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              example: private, max-age=60
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewResource"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags: [Reviews]
+      summary: Update or moderate a review
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewPatch"
+      responses:
+        "200":
+          description: Review updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewResource"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    put:
+      tags: [Reviews]
+      summary: Replace a review
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewPatch"
+      responses:
+        "200":
+          description: Review updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewResource"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    delete:
+      tags: [Reviews]
+      summary: Delete a review
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Review deleted.
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Sanctum token
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    CategorySlug:
+      name: category
+      in: path
+      required: true
+      schema:
+        type: string
+      example: wellness-essentials
+    ProductSlug:
+      name: product
+      in: path
+      required: true
+      schema:
+        type: string
+      example: daily-care-kit
+    ReviewId:
+      name: review
+      in: path
+      required: true
+      schema:
+        type: integer
+      example: 1
+
+  responses:
+    Unauthenticated:
+      description: Missing or invalid bearer token.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            message: Unauthenticated.
+            errors: {}
+    ValidationError:
+      description: Validation failed.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            message: The given data was invalid.
+            errors:
+              email:
+                - Please provide a valid reviewer email address.
+    NotFound:
+      description: Resource not found.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            message: Resource not found.
+            errors: {}
+    TooManyRequests:
+      description: Too many requests.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            message: Too many requests.
+            errors: {}
+
+  schemas:
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: admin@example.com
+        password:
+          type: string
+          format: password
+          example: password
+    LoginResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [token, user]
+          properties:
+            token:
+              type: string
+              example: 1|plain-text-sanctum-token
+            user:
+              $ref: "#/components/schemas/User"
+    User:
+      type: object
+      required: [id, name, email]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+
+    Category:
+      type: object
+      required: [id, name, slug, description, created_at, updated_at]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: [string, "null"]
+        products_count:
+          type: integer
+        products:
+          type: array
+          items:
+            $ref: "#/components/schemas/Product"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    CategoryResource:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/Category"
+    CategoryWrite:
+      type: object
+      required: [name, slug]
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        slug:
+          type: string
+          maxLength: 255
+          pattern: "^[A-Za-z0-9_-]+$"
+        description:
+          type: [string, "null"]
+    CategoryPatch:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        slug:
+          type: string
+          maxLength: 255
+          pattern: "^[A-Za-z0-9_-]+$"
+        description:
+          type: [string, "null"]
+
+    Product:
+      type: object
+      required: [id, category_id, name, slug, description, price, stock_qty, is_published, created_at, updated_at]
+      properties:
+        id:
+          type: integer
+        category_id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: [string, "null"]
+        price:
+          type: string
+          example: "24.99"
+        stock_qty:
+          type: integer
+        is_published:
+          type: boolean
+        average_rating:
+          type: [string, number, "null"]
+        reviews_count:
+          type: integer
+        category:
+          $ref: "#/components/schemas/Category"
+        reviews:
+          type: array
+          items:
+            $ref: "#/components/schemas/Review"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    ProductResource:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/Product"
+    ProductWrite:
+      type: object
+      required: [category_id, name, slug, price, stock_qty]
+      properties:
+        category_id:
+          type: integer
+        name:
+          type: string
+          maxLength: 255
+        slug:
+          type: string
+          maxLength: 255
+          pattern: "^[A-Za-z0-9_-]+$"
+        description:
+          type: [string, "null"]
+        price:
+          type: number
+          minimum: 0
+          maximum: 99999999.99
+        stock_qty:
+          type: integer
+          minimum: 0
+        is_published:
+          type: boolean
+    ProductPatch:
+      type: object
+      properties:
+        category_id:
+          type: integer
+        name:
+          type: string
+          maxLength: 255
+        slug:
+          type: string
+          maxLength: 255
+          pattern: "^[A-Za-z0-9_-]+$"
+        description:
+          type: [string, "null"]
+        price:
+          type: number
+          minimum: 0
+          maximum: 99999999.99
+        stock_qty:
+          type: integer
+          minimum: 0
+        is_published:
+          type: boolean
+
+    Review:
+      type: object
+      required: [id, product_id, reviewer_name, email, rating, body, is_approved, created_at, updated_at]
+      properties:
+        id:
+          type: integer
+        product_id:
+          type: integer
+        reviewer_name:
+          type: string
+        email:
+          type: string
+          format: email
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        body:
+          type: string
+        is_approved:
+          type: boolean
+        product:
+          $ref: "#/components/schemas/Product"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    ReviewResource:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/Review"
+    ReviewWrite:
+      type: object
+      required: [product_id, reviewer_name, email, rating, body]
+      properties:
+        product_id:
+          type: integer
+        reviewer_name:
+          type: string
+          maxLength: 255
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        body:
+          type: string
+          minLength: 10
+    ReviewPatch:
+      type: object
+      properties:
+        product_id:
+          type: integer
+        reviewer_name:
+          type: string
+          maxLength: 255
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        body:
+          type: string
+          minLength: 10
+        is_approved:
+          type: boolean
+
+    PaginatedResponse:
+      type: object
+      required: [data, links, meta]
+      properties:
+        data:
+          type: array
+          items: {}
+        links:
+          type: object
+          required: [first, last, prev, next]
+          properties:
+            first:
+              type: [string, "null"]
+            last:
+              type: [string, "null"]
+            prev:
+              type: [string, "null"]
+            next:
+              type: [string, "null"]
+        meta:
+          type: object
+          required: [current_page, from, last_page, path, per_page, to, total]
+          properties:
+            current_page:
+              type: integer
+            from:
+              type: [integer, "null"]
+            last_page:
+              type: integer
+            path:
+              type: string
+            per_page:
+              type: integer
+            to:
+              type: [integer, "null"]
+            total:
+              type: integer
+    ErrorResponse:
+      type: object
+      required: [message, errors]
+      properties:
+        message:
+          type: string
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
