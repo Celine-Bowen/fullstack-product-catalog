@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { AdminAuthPanel } from "@/components/AdminAuthPanel";
+import { clearAdminSession, readAdminSession, type AdminSession } from "@/lib/admin-auth";
 import { getBrowserApiBase, type Paginated, type Review, type ReviewModerationValues } from "@/lib/api";
 
 type Toast = {
@@ -10,7 +12,7 @@ type Toast = {
 
 export function ReviewsAdminClient() {
   const apiBase = useMemo(() => getBrowserApiBase(), []);
-  const [token, setToken] = useState(() => (typeof window === "undefined" ? "" : window.localStorage.getItem("catalog_admin_token") ?? ""));
+  const [session, setSession] = useState<AdminSession | null>(() => readAdminSession());
   const [reviews, setReviews] = useState<Review[]>([]);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -19,13 +21,13 @@ export function ReviewsAdminClient() {
     setToasts((items) => [...items.slice(-2), { message, type }]);
   }
 
-  async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  async function request<T>(path: string, options: RequestInit = {}, authToken = session?.token): Promise<T> {
     const response = await fetch(`${apiBase}${path}`, {
       ...options,
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
         ...options.headers,
       },
     });
@@ -43,11 +45,11 @@ export function ReviewsAdminClient() {
     return response.json() as Promise<T>;
   }
 
-  async function loadReviews() {
+  async function loadReviews(authToken = session?.token) {
     setIsLoading(true);
 
     try {
-      const response = await request<Paginated<Review>>("/reviews");
+      const response = await request<Paginated<Review>>("/reviews", {}, authToken);
       setReviews(response.data);
       pushToast("Reviews loaded.");
     } catch (error) {
@@ -57,9 +59,10 @@ export function ReviewsAdminClient() {
     }
   }
 
-  function updateToken(value: string) {
-    setToken(value);
-    window.localStorage.setItem("catalog_admin_token", value);
+  function logout() {
+    clearAdminSession();
+    setSession(null);
+    setReviews([]);
   }
 
   async function setApproval(review: Review, isApproved: boolean) {
@@ -109,21 +112,22 @@ export function ReviewsAdminClient() {
         ))}
       </div>
 
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <label className="block max-w-xl flex-1">
-          <span className="text-sm font-medium text-slate-700">Sanctum bearer token</span>
-          <input
-            value={token}
-            onChange={(event) => updateToken(event.target.value)}
-            className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-            placeholder="Paste an admin token"
-          />
-        </label>
-
-        <button className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 disabled:opacity-60" type="button" onClick={loadReviews} disabled={isLoading}>
+      <AdminAuthPanel
+        apiBase={apiBase}
+        session={session}
+        onAuthenticated={(nextSession) => {
+          setSession(nextSession);
+          void loadReviews(nextSession.token);
+        }}
+        onLogout={logout}
+      >
+        <button className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 disabled:opacity-60" type="button" onClick={() => loadReviews()} disabled={isLoading}>
           {isLoading ? "Loading..." : "Load reviews"}
         </button>
-      </div>
+      </AdminAuthPanel>
+
+      {!session ? null : (
+        <>
 
       <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
         <table className="min-w-[56rem] divide-y divide-slate-200 text-sm">
@@ -168,6 +172,8 @@ export function ReviewsAdminClient() {
           </tbody>
         </table>
       </div>
+        </>
+      )}
     </div>
   );
 }

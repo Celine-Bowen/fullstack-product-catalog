@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -120,6 +121,34 @@ class CatalogApiTest extends TestCase
             ->assertJson([
                 'message' => 'Unauthenticated.',
                 'errors' => [],
+            ]);
+    }
+
+    public function test_admin_can_login_and_receive_sanctum_token(): void
+    {
+        User::factory()->create([
+            'name' => 'Catalog Admin',
+            'email' => 'admin@example.com',
+            'password' => Hash::make('password'),
+        ]);
+
+        $response = $this->postJson('/api/v1/auth/login', [
+            'email' => 'admin@example.com',
+            'password' => 'password',
+        ]);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('data.user.email', 'admin@example.com')
+            ->assertJsonStructure([
+                'data' => [
+                    'token',
+                    'user' => [
+                        'id',
+                        'name',
+                        'email',
+                    ],
+                ],
             ]);
     }
 
