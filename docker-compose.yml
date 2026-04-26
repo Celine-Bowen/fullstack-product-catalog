@@ -1,0 +1,51 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./backend:/var/www
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - ./backend/.env
+    networks:
+      - product_catalog
+    command: php artisan serve --host=0.0.0.0 --port=8000
+
+  db:
+    image: postgres:15
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - product_catalog
+
+  redis:
+    image: redis:alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - product_catalog
+
+volumes:
+  pgdata:
+
+networks:
+  product_catalog:
+    name: product_catalog
+    driver: bridge
