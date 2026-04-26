@@ -1,8 +1,8 @@
 import { CategoryCard } from "@/components/CategoryCard";
 import { SectionHeader } from "@/components/SectionHeader";
-import { CATEGORY_REVALIDATE_SECONDS, getCategories } from "@/lib/api";
+import { getCategories } from "@/lib/api";
 
-export const revalidate = CATEGORY_REVALIDATE_SECONDS;
+export const revalidate = 300;
 
 export default async function CategoriesPage() {
   const categories = await getCategories();

@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/ProductCard";
 import { SectionHeader } from "@/components/SectionHeader";
-import { CATEGORY_REVALIDATE_SECONDS, getAllCategorySlugs, getCategory } from "@/lib/api";
+import { getAllCategorySlugs, getCategory } from "@/lib/api";
 
-export const revalidate = CATEGORY_REVALIDATE_SECONDS;
+export const revalidate = 300;
 
 export async function generateStaticParams() {
   return getAllCategorySlugs();

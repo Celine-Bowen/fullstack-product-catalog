@@ -12,10 +12,10 @@ This repository is being built incrementally. The completed checkpoint is:
 - Part 1.4: Form Request validation, consistent API error envelopes, and public review throttling.
 - Part 2.1: Next.js App Router pages for public catalog routes and client-side admin screens.
 - Part 2.2: SSG/ISR detail pages with build-time static params, fetch-level revalidation, and `notFound()` handling.
+- Part 2.3: CRUD admin panel with React Hook Form validation, optimistic updates, confirmations, and toast notifications.
 
 Upcoming checkpoints:
 
-- Part 2.3: admin form validation, optimistic UI polish, and toast notifications.
 - Part 2.4: Drizzle schema type contract.
 - Part 2.5: responsive QA pass.
 
@@ -233,6 +233,13 @@ Admin routes:
 /admin/products      Client-side product CRUD screen
 /admin/reviews       Client-side review moderation screen
 ```
+
+Admin behavior:
+
+- Product create and edit use React Hook Form with client-side rules that mirror the Laravel Form Requests for required fields, slug format, price range, and stock quantity.
+- Product deletes require confirmation, while publish toggles update inline with rollback on API failure.
+- Review moderation supports one-click approve, reject, and delete actions with optimistic updates and rollback on API failure.
+- Admin success and error states are surfaced with dismissible toast notifications.
 
 Frontend env:
 

@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import { SectionHeader } from "@/components/SectionHeader";
-import { formatPrice, formatRating, getAllPublishedProductSlugs, getProduct, PRODUCT_REVALIDATE_SECONDS } from "@/lib/api";
+import { formatPrice, formatRating, getAllPublishedProductSlugs, getProduct } from "@/lib/api";
 
-export const revalidate = PRODUCT_REVALIDATE_SECONDS;
+export const revalidate = 60;
 
 export async function generateStaticParams() {
   return getAllPublishedProductSlugs();

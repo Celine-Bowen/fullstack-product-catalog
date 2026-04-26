@@ -2,9 +2,9 @@ import Link from "next/link";
 import { CategoryCard } from "@/components/CategoryCard";
 import { ProductCard } from "@/components/ProductCard";
 import { SectionHeader } from "@/components/SectionHeader";
-import { getCategories, getProducts, PRODUCT_REVALIDATE_SECONDS } from "@/lib/api";
+import { getCategories, getProducts } from "@/lib/api";
 
-export const revalidate = PRODUCT_REVALIDATE_SECONDS;
+export const revalidate = 60;
 
 export default async function Home() {
   const [products, categories] = await Promise.all([getProducts(), getCategories()]);
