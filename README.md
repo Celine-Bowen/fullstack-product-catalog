@@ -8,10 +8,10 @@ This repository is being built incrementally. The completed checkpoint is:
 
 - Part 1.1: database schema, Eloquent models, relationships, and seed data.
 - Part 1.2: versioned Laravel REST API endpoints for categories, products, and reviews.
+- Part 1.3: Redis-backed service-layer caching with mutation invalidation.
 
 Upcoming checkpoints:
 
-- Part 1.3: service-layer caching and invalidation.
 - Part 1.4: consistent error envelopes and validation hardening.
 - Part 2: Next.js frontend with SSG, ISR, admin CRUD, and responsive UI.
 
@@ -193,6 +193,52 @@ DELETE /api/v1/reviews/{review}
 
 Public review submission is throttled to 5 requests per minute per IP.
 
+## Caching Strategy
+
+The API uses Redis through Laravel's cache store:
+
+```text
+CACHE_STORE=redis
+REDIS_CLIENT=phpredis
+REDIS_HOST=redis
+REDIS_PORT=6379
+```
+
+GET response payloads are cached at the service layer, not inside controllers:
+
+- `CategoryService`
+- `ProductService`
+- `ReviewService`
+
+Cache key convention:
+
+```text
+categories.list.page.{page}
+categories.detail.{slug}
+products.list.page.{page}.category.{slug|all}.visibility.{published|all}
+products.detail.{slug}
+reviews.list.page.{page}
+reviews.detail.{id}
+```
+
+TTL decisions:
+
+- Categories: 300 seconds, because category data changes less frequently.
+- Products: 60 seconds, because product availability, publish state, and ratings can change more often.
+- Reviews: 60 seconds, because moderation actions should appear quickly.
+
+Invalidation:
+
+- Category create, update, and delete flush category and product cache tags.
+- Product create, update, and delete flush product, category, and review cache tags.
+- Review create, update, and delete flush review and product cache tags.
+
+GET responses include `Cache-Control` headers:
+
+- Public catalog responses use `public, max-age={ttl}`.
+- Protected admin responses use `private, max-age={ttl}`.
+- Health checks use `no-store`.
+
 ## Implementation Notes
 
 - Models define explicit mass assignment fields with `$fillable`.
@@ -202,3 +248,4 @@ Public review submission is throttled to 5 requests per minute per IP.
 - Seed data is hand-written rather than randomized to keep review and testing predictable.
 - API responses use Laravel JSON API Resources.
 - Write endpoints are protected with Sanctum token authentication.
+- API reads are cached as resource-shaped arrays through Redis-backed service classes with tag-based invalidation.

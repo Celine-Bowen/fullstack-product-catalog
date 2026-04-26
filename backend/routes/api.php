@@ -7,7 +7,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
     Route::get('/health', function () {
-        return response()->json(['status' => 'ok']);
+        return response()
+            ->json(['status' => 'ok'])
+            ->header('Cache-Control', 'no-store');
     });
 
     Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);
