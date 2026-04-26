@@ -9,10 +9,10 @@ This repository is being built incrementally. The completed checkpoint is:
 - Part 1.1: database schema, Eloquent models, relationships, and seed data.
 - Part 1.2: versioned Laravel REST API endpoints for categories, products, and reviews.
 - Part 1.3: Redis-backed service-layer caching with mutation invalidation.
+- Part 1.4: Form Request validation, consistent API error envelopes, and public review throttling.
 
 Upcoming checkpoints:
 
-- Part 1.4: consistent error envelopes and validation hardening.
 - Part 2: Next.js frontend with SSG, ISR, admin CRUD, and responsive UI.
 
 ## Architecture
@@ -192,6 +192,29 @@ DELETE /api/v1/reviews/{review}
 ```
 
 Public review submission is throttled to 5 requests per minute per IP.
+
+## Error Handling
+
+API errors use a consistent JSON envelope:
+
+```json
+{
+  "message": "The given data was invalid.",
+  "errors": {
+    "field": ["Descriptive validation message."]
+  }
+}
+```
+
+Handled API statuses:
+
+- `401`: unauthenticated requests to protected Sanctum routes.
+- `404`: missing routes or missing route-bound models.
+- `422`: validation failures from Laravel Form Requests.
+- `429`: public review submission throttle limit.
+- `500`: unexpected server errors.
+
+Write operations use Laravel Form Requests with resource-specific validation rules and descriptive messages.
 
 ## Caching Strategy
 

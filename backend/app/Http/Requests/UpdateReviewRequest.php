@@ -26,4 +26,26 @@ class UpdateReviewRequest extends FormRequest
             'is_approved' => ['sometimes', 'boolean'],
         ];
     }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'product_id.required' => 'Please choose the product being reviewed when updating this field.',
+            'product_id.exists' => 'The selected product does not exist.',
+            'reviewer_name.required' => 'Please provide the reviewer name when updating this field.',
+            'reviewer_name.max' => 'The reviewer name may not be greater than 255 characters.',
+            'email.required' => 'Please provide the reviewer email address when updating this field.',
+            'email.email' => 'Please provide a valid reviewer email address.',
+            'rating.required' => 'Please provide a review rating when updating this field.',
+            'rating.integer' => 'The review rating must be a whole number.',
+            'rating.min' => 'The review rating must be at least 1.',
+            'rating.max' => 'The review rating may not be greater than 5.',
+            'body.required' => 'Please provide the review body when updating this field.',
+            'body.min' => 'The review body must be at least 10 characters.',
+            'is_approved.boolean' => 'The approval value must be true or false.',
+        ];
+    }
 }
