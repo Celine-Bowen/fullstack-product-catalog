@@ -1,18 +1,18 @@
 # Fullstack Product Catalog
 
-Women First Digital take-home assessment for a full-stack product catalog and review platform.
+Full-stack product catalog and review platform.
 
 ## Current Status
 
 This repository is being built incrementally. The completed checkpoint is:
 
 - Part 1.1: database schema, Eloquent models, relationships, and seed data.
+- Part 1.2: versioned Laravel REST API endpoints for categories, products, and reviews.
 
 Upcoming checkpoints:
 
-- Part 1.2: versioned Laravel REST API endpoints.
 - Part 1.3: service-layer caching and invalidation.
-- Part 1.4: validation, error handling, Sanctum auth, and throttling.
+- Part 1.4: consistent error envelopes and validation hardening.
 - Part 2: Next.js frontend with SSG, ISR, admin CRUD, and responsive UI.
 
 ## Architecture
@@ -156,6 +156,43 @@ php -l backend/database/seeders/DatabaseSeeder.php
 
 Full database seeding should be run in an environment with the required PDO driver installed, or through the Docker backend container.
 
+## API Endpoints
+
+All API routes are versioned under `/api/v1`.
+
+Public routes:
+
+```text
+GET    /api/v1/health
+GET    /api/v1/categories
+GET    /api/v1/categories/{category}
+GET    /api/v1/products
+GET    /api/v1/products/{product}
+POST   /api/v1/reviews
+```
+
+Protected routes require a Laravel Sanctum bearer token:
+
+```text
+POST   /api/v1/categories
+PUT    /api/v1/categories/{category}
+PATCH  /api/v1/categories/{category}
+DELETE /api/v1/categories/{category}
+
+POST   /api/v1/products
+PUT    /api/v1/products/{product}
+PATCH  /api/v1/products/{product}
+DELETE /api/v1/products/{product}
+
+GET    /api/v1/reviews
+GET    /api/v1/reviews/{review}
+PUT    /api/v1/reviews/{review}
+PATCH  /api/v1/reviews/{review}
+DELETE /api/v1/reviews/{review}
+```
+
+Public review submission is throttled to 5 requests per minute per IP.
+
 ## Implementation Notes
 
 - Models define explicit mass assignment fields with `$fillable`.
@@ -163,3 +200,5 @@ Full database seeding should be run in an environment with the required PDO driv
 - Slug route keys are defined for categories and products in preparation for REST detail endpoints.
 - Query scopes exist for published products and approved reviews.
 - Seed data is hand-written rather than randomized to keep review and testing predictable.
+- API responses use Laravel JSON API Resources.
+- Write endpoints are protected with Sanctum token authentication.
