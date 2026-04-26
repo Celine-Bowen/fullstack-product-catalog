@@ -1,339 +1,276 @@
 # Fullstack Product Catalog
 
-Full-stack product catalog and review platform.
+Full-stack product catalog and review platform built with a Laravel API, PostgreSQL, Redis, and a Next.js App Router frontend.
 
-## Current Status
+The project is intentionally split around clear ownership boundaries:
 
-This repository is being built incrementally. The completed checkpoint is:
+- `backend/` owns persistence, validation, authentication, caching, and API response contracts.
+- `frontend/` owns public catalog rendering, admin workflows, TypeScript API contracts, and responsive UI.
+- `swagger.yaml` documents the HTTP API surface.
 
-- Part 1.1: database schema, Eloquent models, relationships, and seed data.
-- Part 1.2: versioned Laravel REST API endpoints for categories, products, and reviews.
-- Part 1.3: Redis-backed service-layer caching with mutation invalidation.
-- Part 1.4: Form Request validation, consistent API error envelopes, and public review throttling.
-- Part 2.1: Next.js App Router pages for public catalog routes and client-side admin screens.
-- Part 2.2: SSG/ISR detail pages with build-time static params, fetch-level revalidation, and `notFound()` handling.
-- Part 2.3: CRUD admin panel with React Hook Form validation, optimistic updates, confirmations, and toast notifications.
+## Stack
 
-Upcoming checkpoints:
+- Backend: Laravel, Eloquent, Sanctum, PostgreSQL, Redis
+- Frontend: Next.js App Router, React, TypeScript, Tailwind CSS
+- Tooling: Docker Compose, Jest, React Testing Library, Drizzle schema types
 
-- Part 2.4: Drizzle schema type contract.
-- Part 2.5: responsive QA pass.
+## Quick Start
 
-## Architecture
-
-The project is organized as a monorepo:
+Prerequisites:
 
 ```text
-fullstack-product-catalog/
-  backend/     Laravel REST API
-  frontend/    Next.js frontend
+Docker Compose
 ```
 
-Current backend stack:
+For non-Docker development, use PHP 8.3+, Composer, Node 20+, npm, PostgreSQL, and Redis.
 
-- PHP / Laravel
-- PostgreSQL
-- Redis
-- Laravel Eloquent ORM
-- Docker Compose for local services
+From the repository root:
 
-## Data Model
+```bash
+docker compose up -d --build
+docker compose exec backend php artisan migrate --seed
+docker compose exec backend php artisan cache:clear
+```
 
-The catalog currently has three domain resources.
+Open:
 
-### Categories
+```text
+Frontend: http://localhost:3000
+API:      http://localhost:8000/api/v1/health
+```
 
-Fields:
-
-- `id`
-- `name`
-- `slug`
-- `description`
-- `created_at`
-- `updated_at`
-- `deleted_at`
-
-Notes:
-
-- `slug` is unique and indexed.
-- Categories use soft deletes.
-- A category has many products.
-
-### Products
-
-Fields:
-
-- `id`
-- `category_id`
-- `name`
-- `slug`
-- `description`
-- `price`
-- `stock_qty`
-- `is_published`
-- `created_at`
-- `updated_at`
-- `deleted_at`
-
-Notes:
-
-- `category_id` references categories.
-- `slug` is unique and indexed.
-- `is_published` is indexed.
-- Products use soft deletes.
-- A product belongs to a category.
-- A product has many reviews.
-
-### Reviews
-
-Fields:
-
-- `id`
-- `product_id`
-- `reviewer_name`
-- `email`
-- `rating`
-- `body`
-- `is_approved`
-- `created_at`
-- `updated_at`
-
-Notes:
-
-- `product_id` references products.
-- `email` is indexed.
-- `is_approved` is indexed.
-- A review belongs to a product.
-
-## Seed Data
-
-The seed data is deterministic so reviewers get the same catalog every time.
-
-Seeders are split by resource:
-
-- `CategorySeeder`: creates 3 categories.
-- `ProductSeeder`: creates 8 products with mixed published and unpublished states.
-- `ReviewSeeder`: creates 10 reviews with mixed approved and unapproved states.
-
-`DatabaseSeeder` creates a local admin user and then runs the catalog seeders in dependency order.
-
-Default local admin:
+Default admin credentials:
 
 ```text
 Email: admin@example.com
 Password: password
 ```
 
-The seeders use `updateOrCreate`, so they can be safely rerun during local development.
+These credentials are seeded for local development only.
 
-## Backend Setup
+## Environment
 
-From the backend directory:
-
-```bash
-cd backend
-composer install
-php artisan key:generate
-php artisan migrate
-php artisan db:seed
-```
-
-With Docker Compose from the repository root:
-
-```bash
-docker compose up -d
-docker compose exec backend php artisan migrate --seed
-```
-
-## Verification
-
-The model, seeder, service, controller, and test files currently pass PHP syntax checks.
-
-Example checks:
-
-```bash
-php -l backend/app/Models/Category.php
-php -l backend/app/Models/Product.php
-php -l backend/app/Models/Review.php
-php -l backend/database/seeders/DatabaseSeeder.php
-php -l backend/tests/Feature/Api/CatalogApiTest.php
-```
-
-Full database seeding should be run in an environment with the required PDO driver installed, or through the Docker backend container.
-
-Run the API feature tests from the backend container:
-
-```bash
-docker compose up -d --build
-docker compose exec backend php artisan test --filter=CatalogApiTest
-```
-
-The feature tests cover:
-
-- public product listing with response cache headers;
-- public review validation envelope;
-- public review submission;
-- unauthenticated protected writes;
-- authenticated product creation with Sanctum.
-
-## API Endpoints
-
-All API routes are versioned under `/api/v1`.
-
-Public routes:
+Root `.env` is used by the PostgreSQL service:
 
 ```text
-GET    /api/v1/health
-GET    /api/v1/categories
-GET    /api/v1/categories/{category}
-GET    /api/v1/products
-GET    /api/v1/products/{product}
-POST   /api/v1/reviews
+DB_DATABASE=
+DB_USERNAME=
+DB_PASSWORD=
 ```
 
-Protected routes require a Laravel Sanctum bearer token:
+`backend/.env` should point Laravel at the Docker services:
 
 ```text
-POST   /api/v1/categories
-PUT    /api/v1/categories/{category}
-PATCH  /api/v1/categories/{category}
-DELETE /api/v1/categories/{category}
+DB_CONNECTION=pgsql
+DB_HOST=db
+DB_PORT=5432
+DB_DATABASE=
+DB_USERNAME=
+DB_PASSWORD=
 
-POST   /api/v1/products
-PUT    /api/v1/products/{product}
-PATCH  /api/v1/products/{product}
-DELETE /api/v1/products/{product}
-
-GET    /api/v1/reviews
-GET    /api/v1/reviews/{review}
-PUT    /api/v1/reviews/{review}
-PATCH  /api/v1/reviews/{review}
-DELETE /api/v1/reviews/{review}
+CACHE_STORE=redis
+REDIS_HOST=redis
+REDIS_PORT=6379
 ```
 
-Public review submission is throttled to 5 requests per minute per IP.
-
-## Frontend Routes
-
-The Next.js frontend uses the App Router.
-
-Public routes:
-
-```text
-/                    SSG homepage with featured products
-/products            SSG + ISR listing with category filter
-/products/[slug]     SSG + ISR product detail with approved reviews
-/categories          SSG category card grid
-/categories/[slug]   SSG + ISR category detail with products
-```
-
-Admin routes:
-
-```text
-/admin/products      Client-side product CRUD screen
-/admin/reviews       Client-side review moderation screen
-```
-
-Admin behavior:
-
-- Product create and edit use React Hook Form with client-side rules that mirror the Laravel Form Requests for required fields, slug format, price range, and stock quantity.
-- Product deletes require confirmation, while publish toggles update inline with rollback on API failure.
-- Review moderation supports one-click approve, reject, and delete actions with optimistic updates and rollback on API failure.
-- Admin success and error states are surfaced with dismissible toast notifications.
-
-Frontend env:
+`frontend/.env` separates browser and server-side API access:
 
 ```text
 NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
 API_URL=http://backend:8000/api/v1
 ```
 
-`NEXT_PUBLIC_API_URL` is used by browser-side admin fetches. `API_URL` is used by server-side Next.js rendering inside Docker, where the Laravel service is reachable as `backend`.
+`NEXT_PUBLIC_API_URL` is used by browser-side admin requests. `API_URL` is used by server-rendered Next.js routes inside Docker, where the Laravel container is reachable by service name as `backend`.
 
-SSG / ISR decisions:
+If running the frontend directly on the host instead of Docker, use:
 
-- Product list and product detail fetches use `next: { revalidate: 60 }`.
-- Category list and category detail fetches use `next: { revalidate: 300 }`.
-- `/products/[slug]` uses `generateStaticParams()` to pre-render all published product slugs from the paginated API.
-- `/categories/[slug]` uses `generateStaticParams()` to pre-render all category slugs from the paginated API.
-- Product and category detail pages call `notFound()` when the API returns a missing resource. Product detail also calls `notFound()` if the resolved product is unpublished.
+```text
+API_URL=http://localhost:8000/api/v1
+```
 
-## Error Handling
+## Backend
 
-API errors use a consistent JSON envelope:
+Install and run locally from `backend/` if you are not using Docker:
+
+```bash
+composer install
+php artisan key:generate
+php artisan migrate --seed
+php artisan serve --host=0.0.0.0 --port=8000
+```
+
+With Docker, use:
+
+```bash
+docker compose exec backend php artisan migrate --seed
+docker compose exec backend php artisan cache:clear
+```
+
+Important API behavior:
+
+- Public reads are available for categories and published products.
+- Product, category, and review mutations require a Sanctum bearer token.
+- Admin login is available at `POST /api/v1/auth/login`.
+- Public review submission is available at `POST /api/v1/reviews`.
+- Public review submission is throttled to 5 requests per minute.
+- API errors use a consistent envelope:
 
 ```json
 {
   "message": "The given data was invalid.",
-  "errors": {
-    "field": ["Descriptive validation message."]
-  }
+  "errors": {}
 }
 ```
 
-Handled API statuses:
+## Frontend
 
-- `401`: unauthenticated requests to protected Sanctum routes.
-- `404`: missing routes or missing route-bound models.
-- `422`: validation failures from Laravel Form Requests.
-- `429`: public review submission throttle limit.
-- `500`: unexpected server errors.
+Install and run locally from `frontend/`:
 
-Write operations use Laravel Form Requests with resource-specific validation rules and descriptive messages.
+```bash
+npm install
+npm run dev
+```
+
+Build and start:
+
+```bash
+npm run build
+npm run start
+```
+
+Useful checks:
+
+```bash
+npm run lint
+npx tsc --noEmit
+npm test -- --runInBand
+```
+
+Public routes:
+
+```text
+/                    Home page with featured products and categories
+/products            Product listing with category filtering
+/products/[slug]     Product detail with approved reviews
+/categories          Category listing
+/categories/[slug]   Category detail with products
+```
+
+Admin routes:
+
+```text
+/admin/products      Product CRUD and publish toggle
+/admin/reviews       Review list, approve/reject, delete
+```
+
+The admin UI signs in with email/password, stores the returned Sanctum token in `localStorage`, and sends it as a bearer token for protected API requests.
 
 ## Caching Strategy
 
-The API uses Redis through Laravel's cache store:
+Caching is deliberately placed in the Laravel service layer rather than in controllers. Controllers stay thin and HTTP-focused, while services own query shape, cache keys, and invalidation.
 
-```text
-CACHE_STORE=redis
-REDIS_CLIENT=phpredis
-REDIS_HOST=redis
-REDIS_PORT=6379
-```
-
-GET response payloads are cached at the service layer, not inside controllers:
-
-- `CategoryService`
-- `ProductService`
-- `ReviewService`
-
-Cache key convention:
+Cache keys are explicit and resource-scoped:
 
 ```text
 categories.list.page.{page}
 categories.detail.{slug}
-products.list.page.{page}.category.{slug|all}.visibility.{published|all}
+products.list.page.{page}.category.{category}.visibility.{visibility}
 products.detail.{slug}
 reviews.list.page.{page}
 reviews.detail.{id}
 ```
 
-TTL decisions:
+Redis cache tags are used when the store supports them. The services fall back to the default repository when tags are unavailable, which keeps the code portable while still taking advantage of Redis in Docker.
 
-- Categories: 300 seconds, because category data changes less frequently.
-- Products: 60 seconds, because product availability, publish state, and ratings can change more often.
-- Reviews: 60 seconds, because moderation actions should appear quickly.
+Mutation invalidation is broad enough to stay correct:
 
-Invalidation:
+- Category changes flush category and product caches.
+- Product changes flush product, category, and review caches.
+- Review changes flush review and product caches.
 
-- Category create, update, and delete flush category and product cache tags.
-- Product create, update, and delete flush product, category, and review cache tags.
-- Review create, update, and delete flush review and product cache tags.
+That is intentional. The catalog is read-heavy and small enough that correctness is better than trying to surgically expire every affected key.
 
-GET responses include `Cache-Control` headers:
+HTTP cache headers mirror data volatility:
 
-- Public catalog responses use `public, max-age={ttl}`.
-- Protected admin responses use `private, max-age={ttl}`.
-- Health checks use `no-store`.
+- Categories: `public, max-age=300`
+- Public products: `public, max-age=60`
+- Protected/admin reads: `private`
+- Auth responses: `no-store`
 
-## Implementation Notes
+## SSG and ISR Decisions
 
-- Models define explicit mass assignment fields with `$fillable`.
-- Boolean and numeric fields are cast at the model layer.
-- Slug route keys are defined for categories and products in preparation for REST detail endpoints.
-- Query scopes exist for published products and approved reviews.
-- Seed data is hand-written rather than randomized to keep review and testing predictable.
-- API responses use Laravel JSON API Resources.
-- Write endpoints are protected with Sanctum token authentication.
-- API reads are cached as resource-shaped arrays through Redis-backed service classes with tag-based invalidation.
+The frontend uses server components for public catalog reads and client components for admin workflows.
+
+Product pages use a shorter ISR window:
+
+```text
+Products: 60 seconds
+```
+
+Product availability, publication state, price, stock, and review aggregates can change more often, so the product cache is intentionally fresher.
+
+Category pages use a longer ISR window:
+
+```text
+Categories: 300 seconds
+```
+
+Category metadata changes less often, and the backend cache uses the same 300 second TTL for category responses.
+
+Detail pages use `generateStaticParams()` to pre-render known product/category slugs at build time. They also call `notFound()` when the API returns a missing resource. Product detail pages additionally reject unpublished products for public views.
+
+This gives fast public catalog pages without pretending the catalog is immutable. Backend cache invalidation handles API freshness; ISR handles frontend regeneration.
+
+## Type Contracts
+
+The frontend includes a Drizzle schema in `frontend/src/db/schema.ts`. There is no live frontend database connection; the schema is used as a TypeScript contract that mirrors the backend tables.
+
+`InferSelectModel` and `InferInsertModel` provide shared base types for:
+
+- API response models
+- admin form values
+- moderation payloads
+
+This avoids maintaining unrelated hand-written TypeScript interfaces as the data model evolves.
+
+## Tests and API Docs
+
+Frontend tests:
+
+```bash
+cd frontend
+npm test -- --runInBand
+```
+
+Backend tests:
+
+```bash
+docker compose exec backend php artisan test
+```
+
+When running backend tests outside Docker, make sure the required PDO driver is installed for the configured test database.
+
+The full API contract is documented in:
+
+```text
+swagger.yaml
+```
+
+Open `swagger.yaml` in Swagger Editor or any OpenAPI viewer to inspect the API interactively.
+
+## Operational Notes
+
+If the frontend shows stale catalog data after reseeding, clear backend cache and restart the frontend:
+
+```bash
+docker compose exec backend php artisan cache:clear
+docker compose restart frontend
+```
+
+If Next serves an old client bundle during local development:
+
+```bash
+docker compose down
+rm -rf frontend/.next
+docker compose up -d --build
+```
