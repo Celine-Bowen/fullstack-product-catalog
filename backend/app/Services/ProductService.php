@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use App\Support\CacheKeys;
+use Illuminate\Cache\Repository;
+use Illuminate\Cache\TaggableStore;
 use Illuminate\Cache\TaggedCache;
 use Illuminate\Support\Facades\Cache;
 
@@ -88,8 +90,14 @@ class ProductService
     /**
      * @param  list<string>  $tags
      */
-    private function cache(array $tags): TaggedCache
+    private function cache(array $tags): Repository|TaggedCache
     {
-        return Cache::store('redis')->tags($tags);
+        $cache = Cache::store();
+
+        if ($cache->getStore() instanceof TaggableStore) {
+            return $cache->tags($tags);
+        }
+
+        return $cache;
     }
 }

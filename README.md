@@ -143,7 +143,7 @@ docker compose exec backend php artisan migrate --seed
 
 ## Verification
 
-The model and seeder files currently pass PHP syntax checks.
+The model, seeder, service, controller, and test files currently pass PHP syntax checks.
 
 Example checks:
 
@@ -152,9 +152,25 @@ php -l backend/app/Models/Category.php
 php -l backend/app/Models/Product.php
 php -l backend/app/Models/Review.php
 php -l backend/database/seeders/DatabaseSeeder.php
+php -l backend/tests/Feature/Api/CatalogApiTest.php
 ```
 
 Full database seeding should be run in an environment with the required PDO driver installed, or through the Docker backend container.
+
+Run the API feature tests from the backend container:
+
+```bash
+docker compose up -d --build
+docker compose exec backend php artisan test --filter=CatalogApiTest
+```
+
+The feature tests cover:
+
+- public product listing with response cache headers;
+- public review validation envelope;
+- public review submission;
+- unauthenticated protected writes;
+- authenticated product creation with Sanctum.
 
 ## API Endpoints
 
