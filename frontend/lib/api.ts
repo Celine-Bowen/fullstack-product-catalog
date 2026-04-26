@@ -1,0 +1,158 @@
+export type Category = {
+  id: number;
+  name: string;
+  slug: string;
+  description: string | null;
+  products_count?: number;
+  products?: Product[];
+  created_at: string;
+  updated_at: string;
+};
+
+export type Product = {
+  id: number;
+  category_id: number;
+  name: string;
+  slug: string;
+  description: string | null;
+  price: string;
+  stock_qty: number;
+  is_published: boolean;
+  average_rating?: string | null;
+  reviews_count?: number;
+  category?: Category;
+  reviews?: Review[];
+  created_at: string;
+  updated_at: string;
+};
+
+export type Review = {
+  id: number;
+  product_id: number;
+  reviewer_name: string;
+  email: string;
+  rating: number;
+  body: string;
+  is_approved: boolean;
+  product?: Product;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Paginated<T> = {
+  data: T[];
+  links: {
+    first: string | null;
+    last: string | null;
+    prev: string | null;
+    next: string | null;
+  };
+  meta: {
+    current_page: number;
+    from: number | null;
+    last_page: number;
+    path: string;
+    per_page: number;
+    to: number | null;
+    total: number;
+  };
+};
+
+export type Resource<T> = {
+  data: T;
+};
+
+export type ApiError = {
+  message: string;
+  errors: Record<string, string[]>;
+};
+
+const DEFAULT_BROWSER_API_URL = "http://localhost:8000/api/v1";
+const DEFAULT_SERVER_API_URL = "http://backend:8000/api/v1";
+
+export function getBrowserApiBase(): string {
+  return process.env.NEXT_PUBLIC_API_URL ?? DEFAULT_BROWSER_API_URL;
+}
+
+function getServerApiBase(): string {
+  return process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? DEFAULT_SERVER_API_URL;
+}
+
+function buildUrl(path: string, params?: Record<string, string | number | boolean | null | undefined>): string {
+  const base = getServerApiBase().replace(/\/$/, "");
+  const url = new URL(`${base}${path}`);
+
+  Object.entries(params ?? {}).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      url.searchParams.set(key, String(value));
+    }
+  });
+
+  return url.toString();
+}
+
+async function apiFetch<T>(
+  path: string,
+  options: RequestInit & {
+    params?: Record<string, string | number | boolean | null | undefined>;
+    revalidate?: number;
+  } = {},
+): Promise<T> {
+  const { params, revalidate, headers, ...requestOptions } = options;
+  const response = await fetch(buildUrl(path, params), {
+    ...requestOptions,
+    headers: {
+      Accept: "application/json",
+      ...headers,
+    },
+    next: revalidate ? { revalidate } : undefined,
+  });
+
+  if (!response.ok) {
+    throw new Error(`API request failed with status ${response.status}`);
+  }
+
+  return response.json() as Promise<T>;
+}
+
+export async function getProducts(params: {
+  page?: number;
+  category?: string;
+  includeUnpublished?: boolean;
+} = {}): Promise<Paginated<Product>> {
+  return apiFetch<Paginated<Product>>("/products", {
+    params: {
+      page: params.page,
+      category: params.category,
+      include_unpublished: params.includeUnpublished,
+    },
+    revalidate: 60,
+  });
+}
+
+export async function getProduct(slug: string): Promise<Resource<Product>> {
+  return apiFetch<Resource<Product>>(`/products/${slug}`, { revalidate: 60 });
+}
+
+export async function getCategories(): Promise<Paginated<Category>> {
+  return apiFetch<Paginated<Category>>("/categories", { revalidate: 300 });
+}
+
+export async function getCategory(slug: string): Promise<Resource<Category>> {
+  return apiFetch<Resource<Category>>(`/categories/${slug}`, { revalidate: 300 });
+}
+
+export function formatPrice(price: string): string {
+  return new Intl.NumberFormat("en", {
+    style: "currency",
+    currency: "USD",
+  }).format(Number(price));
+}
+
+export function formatRating(value?: string | null): string {
+  if (!value) {
+    return "No ratings";
+  }
+
+  return `${Number(value).toFixed(1)} / 5`;
+}

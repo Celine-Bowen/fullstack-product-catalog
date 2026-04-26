@@ -10,10 +10,14 @@ This repository is being built incrementally. The completed checkpoint is:
 - Part 1.2: versioned Laravel REST API endpoints for categories, products, and reviews.
 - Part 1.3: Redis-backed service-layer caching with mutation invalidation.
 - Part 1.4: Form Request validation, consistent API error envelopes, and public review throttling.
+- Part 2.1: Next.js App Router pages for public catalog routes and client-side admin screens.
 
 Upcoming checkpoints:
 
-- Part 2: Next.js frontend with SSG, ISR, admin CRUD, and responsive UI.
+- Part 2.2: SSG/ISR hardening and route-level polish.
+- Part 2.3: admin form validation, optimistic UI polish, and toast notifications.
+- Part 2.4: Drizzle schema type contract.
+- Part 2.5: responsive QA pass.
 
 ## Architecture
 
@@ -208,6 +212,36 @@ DELETE /api/v1/reviews/{review}
 ```
 
 Public review submission is throttled to 5 requests per minute per IP.
+
+## Frontend Routes
+
+The Next.js frontend uses the App Router.
+
+Public routes:
+
+```text
+/                    SSG homepage with featured products
+/products            SSG + ISR listing with category filter
+/products/[slug]     SSG + ISR product detail with approved reviews
+/categories          SSG category card grid
+/categories/[slug]   SSG + ISR category detail with products
+```
+
+Admin routes:
+
+```text
+/admin/products      Client-side product CRUD screen
+/admin/reviews       Client-side review moderation screen
+```
+
+Frontend env:
+
+```text
+NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+API_URL=http://backend:8000/api/v1
+```
+
+`NEXT_PUBLIC_API_URL` is used by browser-side admin fetches. `API_URL` is used by server-side Next.js rendering inside Docker, where the Laravel service is reachable as `backend`.
 
 ## Error Handling
 
