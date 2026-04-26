@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { ProductCard } from "@/components/ProductCard";
 import { SectionHeader } from "@/components/SectionHeader";
-import { getCategories, getProducts } from "@/lib/api";
+import { getCategories, getProducts, PRODUCT_REVALIDATE_SECONDS } from "@/lib/api";
 
-export const revalidate = 60;
+export const revalidate = PRODUCT_REVALIDATE_SECONDS;
 
 export default async function ProductsPage({
   searchParams,

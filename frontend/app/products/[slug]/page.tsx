@@ -1,15 +1,11 @@
 import { notFound } from "next/navigation";
 import { SectionHeader } from "@/components/SectionHeader";
-import { formatPrice, formatRating, getProduct, getProducts } from "@/lib/api";
+import { formatPrice, formatRating, getAllPublishedProductSlugs, getProduct, PRODUCT_REVALIDATE_SECONDS } from "@/lib/api";
 
-export const revalidate = 60;
+export const revalidate = PRODUCT_REVALIDATE_SECONDS;
 
 export async function generateStaticParams() {
-  const products = await getProducts();
-
-  return products.data.map((product) => ({
-    slug: product.slug,
-  }));
+  return getAllPublishedProductSlugs();
 }
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {

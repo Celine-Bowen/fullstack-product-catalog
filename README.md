@@ -11,10 +11,10 @@ This repository is being built incrementally. The completed checkpoint is:
 - Part 1.3: Redis-backed service-layer caching with mutation invalidation.
 - Part 1.4: Form Request validation, consistent API error envelopes, and public review throttling.
 - Part 2.1: Next.js App Router pages for public catalog routes and client-side admin screens.
+- Part 2.2: SSG/ISR detail pages with build-time static params, fetch-level revalidation, and `notFound()` handling.
 
 Upcoming checkpoints:
 
-- Part 2.2: SSG/ISR hardening and route-level polish.
 - Part 2.3: admin form validation, optimistic UI polish, and toast notifications.
 - Part 2.4: Drizzle schema type contract.
 - Part 2.5: responsive QA pass.
@@ -242,6 +242,14 @@ API_URL=http://backend:8000/api/v1
 ```
 
 `NEXT_PUBLIC_API_URL` is used by browser-side admin fetches. `API_URL` is used by server-side Next.js rendering inside Docker, where the Laravel service is reachable as `backend`.
+
+SSG / ISR decisions:
+
+- Product list and product detail fetches use `next: { revalidate: 60 }`.
+- Category list and category detail fetches use `next: { revalidate: 300 }`.
+- `/products/[slug]` uses `generateStaticParams()` to pre-render all published product slugs from the paginated API.
+- `/categories/[slug]` uses `generateStaticParams()` to pre-render all category slugs from the paginated API.
+- Product and category detail pages call `notFound()` when the API returns a missing resource. Product detail also calls `notFound()` if the resolved product is unpublished.
 
 ## Error Handling
 

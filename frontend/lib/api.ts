@@ -70,6 +70,9 @@ export type ApiError = {
 const DEFAULT_BROWSER_API_URL = "http://localhost:8000/api/v1";
 const DEFAULT_SERVER_API_URL = "http://backend:8000/api/v1";
 
+export const PRODUCT_REVALIDATE_SECONDS = 60;
+export const CATEGORY_REVALIDATE_SECONDS = 300;
+
 export function getBrowserApiBase(): string {
   return process.env.NEXT_PUBLIC_API_URL ?? DEFAULT_BROWSER_API_URL;
 }
@@ -126,20 +129,65 @@ export async function getProducts(params: {
       category: params.category,
       include_unpublished: params.includeUnpublished,
     },
-    revalidate: 60,
+    revalidate: PRODUCT_REVALIDATE_SECONDS,
   });
 }
 
 export async function getProduct(slug: string): Promise<Resource<Product>> {
-  return apiFetch<Resource<Product>>(`/products/${slug}`, { revalidate: 60 });
+  return apiFetch<Resource<Product>>(`/products/${slug}`, { revalidate: PRODUCT_REVALIDATE_SECONDS });
 }
 
-export async function getCategories(): Promise<Paginated<Category>> {
-  return apiFetch<Paginated<Category>>("/categories", { revalidate: 300 });
+export async function getCategories(params: { page?: number } = {}): Promise<Paginated<Category>> {
+  return apiFetch<Paginated<Category>>("/categories", {
+    params: {
+      page: params.page,
+    },
+    revalidate: CATEGORY_REVALIDATE_SECONDS,
+  });
 }
 
 export async function getCategory(slug: string): Promise<Resource<Category>> {
-  return apiFetch<Resource<Category>>(`/categories/${slug}`, { revalidate: 300 });
+  return apiFetch<Resource<Category>>(`/categories/${slug}`, { revalidate: CATEGORY_REVALIDATE_SECONDS });
+}
+
+export async function getAllPublishedProductSlugs(): Promise<Array<{ slug: string }>> {
+  const slugs: Array<{ slug: string }> = [];
+  let page = 1;
+  let lastPage = 1;
+
+  do {
+    const response = await getProducts({ page });
+    slugs.push(
+      ...response.data
+        .filter((product) => product.is_published)
+        .map((product) => ({
+          slug: product.slug,
+        })),
+    );
+    lastPage = response.meta.last_page;
+    page += 1;
+  } while (page <= lastPage);
+
+  return slugs;
+}
+
+export async function getAllCategorySlugs(): Promise<Array<{ slug: string }>> {
+  const slugs: Array<{ slug: string }> = [];
+  let page = 1;
+  let lastPage = 1;
+
+  do {
+    const response = await getCategories({ page });
+    slugs.push(
+      ...response.data.map((category) => ({
+        slug: category.slug,
+      })),
+    );
+    lastPage = response.meta.last_page;
+    page += 1;
+  } while (page <= lastPage);
+
+  return slugs;
 }
 
 export function formatPrice(price: string): string {

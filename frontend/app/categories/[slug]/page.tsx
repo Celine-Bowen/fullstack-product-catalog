@@ -1,16 +1,12 @@
 import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/ProductCard";
 import { SectionHeader } from "@/components/SectionHeader";
-import { getCategories, getCategory } from "@/lib/api";
+import { CATEGORY_REVALIDATE_SECONDS, getAllCategorySlugs, getCategory } from "@/lib/api";
 
-export const revalidate = 300;
+export const revalidate = CATEGORY_REVALIDATE_SECONDS;
 
 export async function generateStaticParams() {
-  const categories = await getCategories();
-
-  return categories.data.map((category) => ({
-    slug: category.slug,
-  }));
+  return getAllCategorySlugs();
 }
 
 export default async function CategoryDetailPage({ params }: { params: Promise<{ slug: string }> }) {
