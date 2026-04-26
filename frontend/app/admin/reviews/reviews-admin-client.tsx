@@ -1,25 +1,45 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AdminAuthPanel } from "@/components/AdminAuthPanel";
 import { clearAdminSession, readAdminSession, type AdminSession } from "@/lib/admin-auth";
 import { getBrowserApiBase, type Paginated, type Review, type ReviewModerationValues } from "@/lib/api";
 
 type Toast = {
+  id: string;
   message: string;
   type: "success" | "error";
 };
 
+let nextToastId = 0;
+
 export function ReviewsAdminClient() {
   const apiBase = useMemo(() => getBrowserApiBase(), []);
-  const [session, setSession] = useState<AdminSession | null>(() => readAdminSession());
+  const [session, setSession] = useState<AdminSession | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  function pushToast(message: string, type: Toast["type"] = "success") {
-    setToasts((items) => [...items.slice(-2), { message, type }]);
+  function pushToast(message: string, type: Toast["type"] = "success", durationMs = type === "error" ? 6000 : 3000) {
+    const toast = {
+      id: String(nextToastId++),
+      message,
+      type,
+    };
+
+    setToasts((items) => [...items.slice(-2), toast]);
+    window.setTimeout(() => {
+      setToasts((items) => items.filter((item) => item.id !== toast.id));
+    }, durationMs);
   }
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setSession(readAdminSession());
+    }, 0);
+
+    return () => window.clearTimeout(timeout);
+  }, []);
 
   async function request<T>(path: string, options: RequestInit = {}, authToken = session?.token): Promise<T> {
     const response = await fetch(`${apiBase}${path}`, {
@@ -92,7 +112,7 @@ export function ReviewsAdminClient() {
 
     try {
       await request(`/reviews/${review.id}`, { method: "DELETE" });
-      pushToast("Review deleted.");
+      pushToast("Review deleted.", "success", 5000);
     } catch (error) {
       setReviews(previousReviews);
       pushToast(error instanceof Error ? error.message : "Unable to delete review.", "error");
@@ -102,10 +122,10 @@ export function ReviewsAdminClient() {
   return (
     <div className="mt-6 space-y-6">
       <div className="fixed right-4 top-4 z-50 w-[min(24rem,calc(100vw-2rem))] space-y-2">
-        {toasts.map((toast, index) => (
-          <div key={`${toast.message}-${index}`} className={`flex items-start justify-between gap-3 rounded-md border px-4 py-3 text-sm shadow-sm ${toast.type === "success" ? "border-teal-200 bg-teal-50 text-teal-900" : "border-red-200 bg-red-50 text-red-900"}`}>
+        {toasts.map((toast) => (
+          <div key={toast.id} className={`flex items-start justify-between gap-3 rounded-md border px-4 py-3 text-sm shadow-sm ${toast.type === "success" ? "border-teal-200 bg-teal-50 text-teal-900" : "border-red-200 bg-red-50 text-red-900"}`}>
             <span>{toast.message}</span>
-            <button className="font-semibold" type="button" onClick={() => setToasts((items) => items.filter((_, itemIndex) => itemIndex !== index))}>
+            <button className="font-semibold" type="button" onClick={() => setToasts((items) => items.filter((item) => item.id !== toast.id))}>
               Close
             </button>
           </div>

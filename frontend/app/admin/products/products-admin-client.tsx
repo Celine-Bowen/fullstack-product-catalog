@@ -1,15 +1,18 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { AdminAuthPanel } from "@/components/AdminAuthPanel";
 import { clearAdminSession, readAdminSession, type AdminSession } from "@/lib/admin-auth";
 import { getBrowserApiBase, type Category, type Paginated, type Product, type ProductFormValues, type Resource } from "@/lib/api";
 
 type Toast = {
+  id: string;
   message: string;
   type: "success" | "error";
 };
+
+let nextToastId = 0;
 
 const emptyForm: ProductFormValues = {
   category_id: "",
@@ -44,7 +47,7 @@ function buildOptimisticProduct(values: ProductFormValues, categories: Category[
 
 export function ProductAdminClient() {
   const apiBase = useMemo(() => getBrowserApiBase(), []);
-  const [session, setSession] = useState<AdminSession | null>(() => readAdminSession());
+  const [session, setSession] = useState<AdminSession | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -60,8 +63,25 @@ export function ProductAdminClient() {
     defaultValues: emptyForm,
   });
 
-  function pushToast(message: string, type: Toast["type"] = "success") {
-    setToasts((items) => [...items.slice(-2), { message, type }]);
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setSession(readAdminSession());
+    }, 0);
+
+    return () => window.clearTimeout(timeout);
+  }, []);
+
+  function pushToast(message: string, type: Toast["type"] = "success", durationMs = type === "error" ? 6000 : 3000) {
+    const toast = {
+      id: String(nextToastId++),
+      message,
+      type,
+    };
+
+    setToasts((items) => [...items.slice(-2), toast]);
+    window.setTimeout(() => {
+      setToasts((items) => items.filter((item) => item.id !== toast.id));
+    }, durationMs);
   }
 
   async function request<T>(path: string, options: RequestInit = {}, authToken = session?.token): Promise<T> {
@@ -182,7 +202,7 @@ export function ProductAdminClient() {
 
     try {
       await request(`/products/${product.slug}`, { method: "DELETE" });
-      pushToast("Product deleted.");
+      pushToast("Product deleted.", "success", 5000);
     } catch (error) {
       setProducts(previousProducts);
       pushToast(error instanceof Error ? error.message : "Unable to delete product.", "error");
@@ -208,10 +228,10 @@ export function ProductAdminClient() {
   return (
     <div className="mt-6 space-y-6">
       <div className="fixed right-4 top-4 z-50 w-[min(24rem,calc(100vw-2rem))] space-y-2">
-        {toasts.map((toast, index) => (
-          <div key={`${toast.message}-${index}`} className={`flex items-start justify-between gap-3 rounded-md border px-4 py-3 text-sm shadow-sm ${toast.type === "success" ? "border-teal-200 bg-teal-50 text-teal-900" : "border-red-200 bg-red-50 text-red-900"}`}>
+        {toasts.map((toast) => (
+          <div key={toast.id} className={`flex items-start justify-between gap-3 rounded-md border px-4 py-3 text-sm shadow-sm ${toast.type === "success" ? "border-teal-200 bg-teal-50 text-teal-900" : "border-red-200 bg-red-50 text-red-900"}`}>
             <span>{toast.message}</span>
-            <button className="font-semibold" type="button" onClick={() => setToasts((items) => items.filter((_, itemIndex) => itemIndex !== index))}>
+            <button className="font-semibold" type="button" onClick={() => setToasts((items) => items.filter((item) => item.id !== toast.id))}>
               Close
             </button>
           </div>
@@ -322,9 +342,10 @@ export function ProductAdminClient() {
           {errors.stock_qty ? <span className="text-xs text-red-700">{errors.stock_qty.message}</span> : null}
         </label>
 
-        <label className="flex items-center gap-2 pt-7 text-sm text-slate-700">
-          <input type="checkbox" className="size-4 rounded border-slate-300" {...register("is_published")} />
-          Published
+        <label className="flex items-center justify-between gap-3 rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-700 md:mt-6">
+          <span className="font-medium">Published</span>
+          <input type="checkbox" className="peer sr-only" {...register("is_published")} />
+          <span className="relative h-6 w-11 rounded-full bg-slate-300 transition-colors after:absolute after:left-1 after:top-1 after:size-4 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:bg-teal-700 peer-checked:after:translate-x-5 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-teal-700" />
         </label>
 
         <label className="space-y-1 md:col-span-2">
