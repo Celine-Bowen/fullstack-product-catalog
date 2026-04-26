@@ -18,6 +18,25 @@ services:
       - product_catalog
     command: php artisan serve --host=0.0.0.0 --port=8000
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: nextjs_app
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./frontend/.env
+    depends_on:
+      - backend
+    networks:
+      - product_catalog
+
   db:
     image: postgres:15
     restart: unless-stopped
