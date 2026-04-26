@@ -126,33 +126,33 @@ export function ReviewsAdminClient() {
       </div>
 
       <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
-        <table className="min-w-full divide-y divide-slate-200 text-sm">
+        <table className="min-w-[56rem] divide-y divide-slate-200 text-sm">
           <thead className="bg-slate-50 text-left text-slate-600">
             <tr>
-              <th className="sticky left-0 bg-slate-50 px-4 py-3">Reviewer</th>
-              <th className="px-4 py-3">Product</th>
-              <th className="px-4 py-3">Rating</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Review</th>
-              <th className="px-4 py-3">Actions</th>
+              <th className="sticky left-0 z-20 w-48 min-w-48 bg-slate-50 px-3 py-3 shadow-[1px_0_0_#e2e8f0] sm:px-4">Reviewer</th>
+              <th className="px-3 py-3 sm:px-4">Product</th>
+              <th className="px-3 py-3 sm:px-4">Rating</th>
+              <th className="px-3 py-3 sm:px-4">Status</th>
+              <th className="px-3 py-3 sm:px-4">Review</th>
+              <th className="px-3 py-3 sm:px-4">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {reviews.map((review) => (
               <tr key={review.id}>
-                <td className="sticky left-0 bg-white px-4 py-3">
+                <td className="sticky left-0 z-10 w-48 min-w-48 bg-white px-3 py-3 shadow-[1px_0_0_#e2e8f0] sm:px-4">
                   <p className="font-medium text-slate-950">{review.reviewer_name}</p>
                   <p className="text-xs text-slate-500">{review.email}</p>
                 </td>
-                <td className="px-4 py-3">{review.product?.name ?? review.product_id}</td>
-                <td className="px-4 py-3">{review.rating} / 5</td>
-                <td className="px-4 py-3">
+                <td className="px-3 py-3 sm:px-4">{review.product?.name ?? review.product_id}</td>
+                <td className="px-3 py-3 sm:px-4">{review.rating} / 5</td>
+                <td className="px-3 py-3 sm:px-4">
                   <span className={`rounded-full px-2 py-1 text-xs font-medium ${review.is_approved ? "bg-teal-50 text-teal-800" : "bg-amber-50 text-amber-800"}`}>
                     {review.is_approved ? "Approved" : "Pending"}
                   </span>
                 </td>
-                <td className="max-w-sm px-4 py-3 text-slate-600">{review.body}</td>
-                <td className="space-x-2 px-4 py-3">
+                <td className="max-w-sm px-3 py-3 text-slate-600 sm:px-4">{review.body}</td>
+                <td className="space-x-2 px-3 py-3 sm:px-4">
                   <button className="font-medium text-teal-700 disabled:text-slate-400" type="button" disabled={review.is_approved} onClick={() => setApproval(review, true)}>
                     Approve
                   </button>

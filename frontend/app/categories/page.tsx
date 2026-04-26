@@ -10,7 +10,7 @@ export default async function CategoriesPage() {
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <SectionHeader title="Categories" eyebrow="Catalog" />
-      <div className="mt-6 grid gap-4 md:grid-cols-3">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {categories.data.map((category) => (
           <CategoryCard key={category.id} category={category} />
         ))}

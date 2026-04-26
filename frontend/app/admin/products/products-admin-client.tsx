@@ -325,7 +325,7 @@ export function ProductAdminClient() {
           <textarea className="min-h-24 w-full rounded-md border border-slate-300 px-3 py-2 text-sm" {...register("description")} />
         </label>
 
-        <div className="flex gap-2 md:col-span-2">
+        <div className="flex flex-col gap-2 sm:flex-row md:col-span-2">
           <button className="rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800 disabled:opacity-60" type="submit" disabled={isSubmitting}>
             {editingProductId ? "Update product" : "Create product"}
           </button>
@@ -343,33 +343,33 @@ export function ProductAdminClient() {
       </form>
 
       <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
-        <table className="min-w-full divide-y divide-slate-200 text-sm">
+        <table className="min-w-[52rem] divide-y divide-slate-200 text-sm">
           <thead className="bg-slate-50 text-left text-slate-600">
             <tr>
-              <th className="sticky left-0 bg-slate-50 px-4 py-3">Product</th>
-              <th className="px-4 py-3">Category</th>
-              <th className="px-4 py-3">Price</th>
-              <th className="px-4 py-3">Stock</th>
-              <th className="px-4 py-3">Published</th>
-              <th className="px-4 py-3">Actions</th>
+              <th className="sticky left-0 z-20 w-44 min-w-44 bg-slate-50 px-3 py-3 shadow-[1px_0_0_#e2e8f0] sm:px-4">Product</th>
+              <th className="px-3 py-3 sm:px-4">Category</th>
+              <th className="px-3 py-3 sm:px-4">Price</th>
+              <th className="px-3 py-3 sm:px-4">Stock</th>
+              <th className="px-3 py-3 sm:px-4">Published</th>
+              <th className="px-3 py-3 sm:px-4">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {products.map((product) => (
               <tr key={product.id}>
-                <td className="sticky left-0 bg-white px-4 py-3">
+                <td className="sticky left-0 z-10 w-44 min-w-44 bg-white px-3 py-3 shadow-[1px_0_0_#e2e8f0] sm:px-4">
                   <p className="font-medium text-slate-950">{product.name}</p>
                   <p className="text-xs text-slate-500">{product.slug}</p>
                 </td>
-                <td className="px-4 py-3">{product.category?.name ?? product.category_id}</td>
-                <td className="px-4 py-3">{product.price}</td>
-                <td className="px-4 py-3">{product.stock_qty}</td>
-                <td className="px-4 py-3">
+                <td className="px-3 py-3 sm:px-4">{product.category?.name ?? product.category_id}</td>
+                <td className="px-3 py-3 sm:px-4">{product.price}</td>
+                <td className="px-3 py-3 sm:px-4">{product.stock_qty}</td>
+                <td className="px-3 py-3 sm:px-4">
                   <button className="rounded-md border border-slate-300 px-3 py-1 text-xs font-medium" type="button" onClick={() => togglePublished(product)}>
                     {product.is_published ? "Published" : "Draft"}
                   </button>
                 </td>
-                <td className="space-x-2 px-4 py-3">
+                <td className="space-x-2 px-3 py-3 sm:px-4">
                   <button className="font-medium text-teal-700" type="button" onClick={() => editProduct(product)}>
                     Edit
                   </button>
