@@ -24,13 +24,87 @@ Docker Compose
 
 For non-Docker development, use PHP 8.3+, Composer, Node 20+, npm, PostgreSQL, and Redis.
 
+### 1. Install dependencies
+
+If you want local editor tooling, tests, and non-Docker commands available, install backend and frontend dependencies first:
+
+```bash
+cd backend
+composer install
+
+cd ../frontend
+npm install
+
+cd ..
+```
+
+Docker-only users can skip this step because the backend and frontend images run `composer install` and `npm install` during `docker compose up --build`.
+
+### 2. Copy environment files
+
+From the repository root:
+
+```bash
+cp .env.example .env
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+```
+
+### 3. Update environment values
+
+Update the root `.env` for the PostgreSQL service:
+
+```text
+DB_DATABASE=
+DB_USERNAME=
+DB_PASSWORD=
+```
+
+Update `backend/.env` so Laravel points at the Docker services:
+
+```text
+APP_KEY=
+
+DB_CONNECTION=pgsql
+DB_HOST=db
+DB_PORT=5432
+DB_DATABASE=
+DB_USERNAME=
+DB_PASSWORD=
+
+CACHE_STORE=redis
+REDIS_HOST=redis
+REDIS_PORT=6379
+```
+
+Update `frontend/.env` for browser and server-side API access:
+
+```text
+NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+API_URL=http://backend:8000/api/v1
+```
+
+`NEXT_PUBLIC_API_URL` is used by browser-side admin requests. `API_URL` is used by server-rendered Next.js routes inside Docker, where the Laravel container is reachable by service name as `backend`.
+
+### 4. Start the stack
+
 From the repository root:
 
 ```bash
 docker compose up -d --build
+```
+
+### 5. Prepare Laravel
+
+Generate the Laravel app key if `APP_KEY` is empty, then run migrations and seeders:
+
+```bash
+docker compose exec backend php artisan key:generate
 docker compose exec backend php artisan migrate --seed
 docker compose exec backend php artisan cache:clear
 ```
+
+### 6. Open the app
 
 Open:
 
@@ -49,6 +123,8 @@ Password: password
 These credentials are seeded for local development only.
 
 ## Environment
+
+The Docker quick start above is the recommended setup path. This section explains what each environment file controls.
 
 Root `.env` is used by the PostgreSQL service:
 
@@ -88,22 +164,25 @@ If running the frontend directly on the host instead of Docker, use:
 API_URL=http://localhost:8000/api/v1
 ```
 
+For local, non-Docker Laravel development, `backend/.env` should use your host database and cache settings instead of Docker service names.
+
 ## Backend
 
-Install and run locally from `backend/` if you are not using Docker:
+With Docker, backend setup is:
+
+```bash
+docker compose exec backend php artisan key:generate
+docker compose exec backend php artisan migrate --seed
+docker compose exec backend php artisan cache:clear
+```
+
+For local, non-Docker backend development, run from `backend/`:
 
 ```bash
 composer install
 php artisan key:generate
 php artisan migrate --seed
 php artisan serve --host=0.0.0.0 --port=8000
-```
-
-With Docker, use:
-
-```bash
-docker compose exec backend php artisan migrate --seed
-docker compose exec backend php artisan cache:clear
 ```
 
 Important API behavior:
