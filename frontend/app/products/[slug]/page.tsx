@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { ReviewForm } from "@/components/ReviewForm";
 import { SectionHeader } from "@/components/SectionHeader";
 import { formatPrice, formatRating, getAllPublishedProductSlugs, getProduct } from "@/lib/api";
 
@@ -54,7 +55,15 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">{review.body}</p>
             </article>
           ))}
+          {(product.reviews ?? []).length === 0 ? (
+            <p className="text-sm text-slate-600 dark:text-slate-300">No approved reviews yet.</p>
+          ) : null}
         </div>
+      </section>
+
+      <section className="mt-10">
+        <SectionHeader title="Add a review" />
+        <ReviewForm productId={product.id} />
       </section>
     </main>
   );

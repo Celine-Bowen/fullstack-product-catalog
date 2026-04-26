@@ -146,4 +146,11 @@ export type ProductFormValues = {
   is_published: ProductRow["isPublished"];
 };
 
+export type ReviewFormValues = {
+  reviewer_name: NewReview["reviewerName"];
+  email: NewReview["email"];
+  rating: string;
+  body: NewReview["body"];
+};
+
 export type ReviewModerationValues = Pick<NewReview, "isApproved">;

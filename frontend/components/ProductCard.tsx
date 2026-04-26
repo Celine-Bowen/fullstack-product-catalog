@@ -3,7 +3,10 @@ import { formatPrice, formatRating, type Product } from "@/lib/api";
 
 export function ProductCard({ product }: { product: Product }) {
   return (
-    <article className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <Link
+      href={`/products/${product.slug}`}
+      className="group block overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:border-teal-500 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-teal-400"
+    >
       <div className="flex aspect-[4/3] items-end bg-[linear-gradient(135deg,#dbeafe_0%,#fef3c7_48%,#dcfce7_100%)] p-4">
         <span className="rounded-md bg-white/90 px-2 py-1 text-xs font-semibold text-slate-700 shadow-sm dark:bg-slate-950/90 dark:text-slate-200">
           {product.category?.name ?? "Catalog"}
@@ -12,9 +15,7 @@ export function ProductCard({ product }: { product: Product }) {
       <div className="space-y-3 p-4">
         <div>
           <h2 className="text-base font-semibold text-slate-950 dark:text-slate-50">
-            <Link href={`/products/${product.slug}`} className="hover:text-teal-700 dark:hover:text-teal-300">
-              {product.name}
-            </Link>
+            <span className="group-hover:text-teal-700 dark:group-hover:text-teal-300">{product.name}</span>
           </h2>
           <p className="mt-1 line-clamp-2 text-sm leading-6 text-slate-600 dark:text-slate-300">{product.description}</p>
         </div>
@@ -27,6 +28,6 @@ export function ProductCard({ product }: { product: Product }) {
           <span>{product.reviews_count ?? 0} reviews</span>
         </div>
       </div>
-    </article>
+    </Link>
   );
 }

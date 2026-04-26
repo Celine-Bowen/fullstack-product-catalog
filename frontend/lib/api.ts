@@ -1,4 +1,4 @@
-export type { Category, NewCategory, NewProduct, NewReview, Product, ProductFormValues, Review, ReviewModerationValues } from "@/src/db/schema";
+export type { Category, NewCategory, NewProduct, NewReview, Product, ProductFormValues, Review, ReviewFormValues, ReviewModerationValues } from "@/src/db/schema";
 import type { Category, Product } from "@/src/db/schema";
 
 export type Paginated<T> = {
