@@ -2,19 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
-import { getBrowserApiBase, type Category, type Paginated, type Product, type Resource } from "@/lib/api";
-
-type ProductFormValues = {
-  id?: number;
-  routeSlug?: string;
-  category_id: string;
-  name: string;
-  slug: string;
-  description: string;
-  price: string;
-  stock_qty: string;
-  is_published: boolean;
-};
+import { getBrowserApiBase, type Category, type Paginated, type Product, type ProductFormValues, type Resource } from "@/lib/api";
 
 type Toast = {
   message: string;

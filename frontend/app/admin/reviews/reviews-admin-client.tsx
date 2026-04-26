@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { getBrowserApiBase, type Paginated, type Review } from "@/lib/api";
+import { getBrowserApiBase, type Paginated, type Review, type ReviewModerationValues } from "@/lib/api";
 
 type Toast = {
   message: string;
@@ -66,9 +66,11 @@ export function ReviewsAdminClient() {
     setReviews((items) => items.map((item) => (item.id === review.id ? { ...item, is_approved: isApproved } : item)));
 
     try {
+      const payload: ReviewModerationValues = { isApproved };
+
       await request(`/reviews/${review.id}`, {
         method: "PATCH",
-        body: JSON.stringify({ is_approved: isApproved }),
+        body: JSON.stringify({ is_approved: payload.isApproved }),
       });
       pushToast(isApproved ? "Review approved." : "Review rejected.");
     } catch (error) {

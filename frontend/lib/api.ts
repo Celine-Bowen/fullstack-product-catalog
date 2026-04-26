@@ -1,43 +1,5 @@
-export type Category = {
-  id: number;
-  name: string;
-  slug: string;
-  description: string | null;
-  products_count?: number;
-  products?: Product[];
-  created_at: string;
-  updated_at: string;
-};
-
-export type Product = {
-  id: number;
-  category_id: number;
-  name: string;
-  slug: string;
-  description: string | null;
-  price: string;
-  stock_qty: number;
-  is_published: boolean;
-  average_rating?: string | null;
-  reviews_count?: number;
-  category?: Category;
-  reviews?: Review[];
-  created_at: string;
-  updated_at: string;
-};
-
-export type Review = {
-  id: number;
-  product_id: number;
-  reviewer_name: string;
-  email: string;
-  rating: number;
-  body: string;
-  is_approved: boolean;
-  product?: Product;
-  created_at: string;
-  updated_at: string;
-};
+export type { Category, NewCategory, NewProduct, NewReview, Product, ProductFormValues, Review, ReviewModerationValues } from "@/src/db/schema";
+import type { Category, Product } from "@/src/db/schema";
 
 export type Paginated<T> = {
   data: T[];
