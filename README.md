@@ -180,13 +180,7 @@ For local, non-Docker Laravel development, `backend/.env` should use your host d
 
 ## Backend
 
-With Docker, backend setup is:
-
-```bash
-docker compose exec backend php artisan key:generate
-docker compose exec backend php artisan migrate --seed
-docker compose exec backend php artisan cache:clear
-```
+With Docker, use the Laravel preparation commands in the Quick Start section after starting the stack.
 
 For local, non-Docker backend development, run from `backend/`:
 
