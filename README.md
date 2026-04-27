@@ -14,6 +14,18 @@ The project is intentionally split around clear ownership boundaries:
 - Frontend: Next.js App Router, React, TypeScript, Tailwind CSS
 - Tooling: Docker Compose, Jest, React Testing Library, Drizzle schema types
 
+## Screenshots
+
+![Product Catalog homepage](docs/screenshots/home.png)
+
+| Products | Product detail |
+| --- | --- |
+| ![Products catalog page](docs/screenshots/products.png) | ![Product detail page](docs/screenshots/product_slug.png) |
+
+| Categories | Admin products |
+| --- | --- |
+| ![Categories page](docs/screenshots/categories.png) | ![Admin products page](docs/screenshots/admin.png) |
+
 ## Quick Start
 
 Prerequisites:
