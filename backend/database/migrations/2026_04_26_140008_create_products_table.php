@@ -16,7 +16,7 @@ return new class extends Migration
                 ->cascadeOnDelete();
 
             $table->string('name');
-            $table->string('slug')->unique()->index();
+            $table->string('slug')->unique();
             $table->text('description')->nullable();
 
             $table->decimal('price', 10, 2);
@@ -25,7 +25,7 @@ return new class extends Migration
             $table->boolean('is_published')->default(false)->index();
 
             $table->timestamps();
-            $table->softDeletes(); 
+            $table->softDeletes();
         });
     }
 
