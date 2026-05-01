@@ -4,14 +4,13 @@ namespace App\Services;
 
 use App\Http\Resources\CategoryResource;
 use App\Models\Category;
+use App\Services\Concerns\Cacheable;
 use App\Support\CacheKeys;
-use Illuminate\Cache\Repository;
-use Illuminate\Cache\TaggableStore;
-use Illuminate\Cache\TaggedCache;
-use Illuminate\Support\Facades\Cache;
 
 class CategoryService
 {
+    use Cacheable;
+
     /**
      * @return array<string, mixed>
      */
@@ -76,19 +75,5 @@ class CategoryService
     private function flushCatalogCache(): void
     {
         $this->cache([CacheKeys::CATEGORY_TAG, CacheKeys::PRODUCT_TAG])->flush();
-    }
-
-    /**
-     * @param  list<string>  $tags
-     */
-    private function cache(array $tags): Repository|TaggedCache
-    {
-        $cache = Cache::store();
-
-        if ($cache->getStore() instanceof TaggableStore) {
-            return $cache->tags($tags);
-        }
-
-        return $cache;
     }
 }
