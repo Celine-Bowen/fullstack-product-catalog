@@ -21,7 +21,7 @@ class ReviewService
                 $reviews = Review::query()
                     ->with('product')
                     ->latest()
-                    ->paginate(page: $page);
+                    ->paginate(perPage: CacheKeys::PAGINATION_PER_PAGE, page: $page);
 
                 return ReviewResource::collection($reviews)
                     ->response()

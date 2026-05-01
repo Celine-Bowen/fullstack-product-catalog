@@ -14,9 +14,11 @@ export function useAdminToasts() {
   const timers = useRef<Map<string, number>>(new Map());
 
   useEffect(() => {
+    const activeTimers = timers.current;
+
     return () => {
-      timers.current.forEach((timerId) => window.clearTimeout(timerId));
-      timers.current.clear();
+      activeTimers.forEach((timerId) => window.clearTimeout(timerId));
+      activeTimers.clear();
     };
   }, []);
 

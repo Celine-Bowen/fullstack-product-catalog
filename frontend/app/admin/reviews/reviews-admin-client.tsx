@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AdminAuthPanel } from "@/components/AdminAuthPanel";
+import { AdminPagination } from "@/components/AdminPagination";
 import { useAdminApi } from "@/hooks/use-admin-api";
 import { useAdminToasts } from "@/hooks/use-admin-toasts";
 import { clearAdminSession, readAdminSession, type AdminSession } from "@/lib/admin-auth";
@@ -12,6 +13,11 @@ export function ReviewsAdminClient() {
   const [session, setSession] = useState<AdminSession | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [pageFrom, setPageFrom] = useState<number | null>(null);
+  const [pageTo, setPageTo] = useState<number | null>(null);
+  const [totalReviews, setTotalReviews] = useState(0);
   const { request } = useAdminApi(apiBase, session?.token);
   const { toasts, pushToast, dismissToast } = useAdminToasts();
 
@@ -23,12 +29,17 @@ export function ReviewsAdminClient() {
     return () => window.clearTimeout(timeout);
   }, []);
 
-  async function loadReviews(authToken = session?.token) {
+  async function loadReviews(page = currentPage, authToken = session?.token) {
     setIsLoading(true);
 
     try {
-      const response = await request<Paginated<Review>>("/reviews", {}, authToken);
+      const response = await request<Paginated<Review>>(`/reviews?page=${page}`, {}, authToken);
       setReviews(response.data);
+      setCurrentPage(response.meta.current_page);
+      setLastPage(response.meta.last_page);
+      setPageFrom(response.meta.from);
+      setPageTo(response.meta.to);
+      setTotalReviews(response.meta.total);
       pushToast("Reviews loaded.");
     } catch (error) {
       pushToast(error instanceof Error ? error.message : "Unable to load reviews.", "error");
@@ -41,6 +52,11 @@ export function ReviewsAdminClient() {
     clearAdminSession();
     setSession(null);
     setReviews([]);
+    setCurrentPage(1);
+    setLastPage(1);
+    setPageFrom(null);
+    setPageTo(null);
+    setTotalReviews(0);
   }
 
   async function setApproval(review: Review, isApproved: boolean) {
@@ -70,6 +86,8 @@ export function ReviewsAdminClient() {
 
     try {
       await request(`/reviews/${review.id}`, { method: "DELETE" });
+      const nextPage = previousReviews.length === 1 && currentPage > 1 ? currentPage - 1 : currentPage;
+      await loadReviews(nextPage);
       pushToast("Review deleted.", "success", 5000);
     } catch (error) {
       setReviews(previousReviews);
@@ -95,7 +113,7 @@ export function ReviewsAdminClient() {
         session={session}
         onAuthenticated={(nextSession) => {
           setSession(nextSession);
-          void loadReviews(nextSession.token);
+          void loadReviews(1, nextSession.token);
         }}
         onLogout={logout}
       >
@@ -149,6 +167,15 @@ export function ReviewsAdminClient() {
             ))}
           </tbody>
         </table>
+        <AdminPagination
+          currentPage={currentPage}
+          lastPage={lastPage}
+          from={pageFrom}
+          to={pageTo}
+          total={totalReviews}
+          isLoading={isLoading}
+          onPageChange={(page) => void loadReviews(page)}
+        />
       </div>
         </>
       )}

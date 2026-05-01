@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { AdminAuthPanel } from "@/components/AdminAuthPanel";
+import { AdminPagination } from "@/components/AdminPagination";
 import { useAdminApi } from "@/hooks/use-admin-api";
 import { useAdminToasts } from "@/hooks/use-admin-toasts";
 import { clearAdminSession, readAdminSession, type AdminSession } from "@/lib/admin-auth";
@@ -46,6 +47,11 @@ export function ProductAdminClient() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [editingProductId, setEditingProductId] = useState<number | undefined>();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [pageFrom, setPageFrom] = useState<number | null>(null);
+  const [pageTo, setPageTo] = useState<number | null>(null);
+  const [totalProducts, setTotalProducts] = useState(0);
   const { request } = useAdminApi(apiBase, session?.token);
   const { toasts, pushToast, dismissToast } = useAdminToasts();
 
@@ -66,16 +72,21 @@ export function ProductAdminClient() {
     return () => window.clearTimeout(timeout);
   }, []);
 
-  async function loadData(authToken = session?.token) {
+  async function loadData(page = currentPage, authToken = session?.token) {
     setIsLoading(true);
 
     try {
       const [productResponse, categoryResponse] = await Promise.all([
-        request<Paginated<Product>>("/products?include_unpublished=1", {}, authToken),
+        request<Paginated<Product>>(`/products?include_unpublished=1&page=${page}`, {}, authToken),
         request<Paginated<Category>>("/categories", {}, authToken),
       ]);
 
       setProducts(productResponse.data);
+      setCurrentPage(productResponse.meta.current_page);
+      setLastPage(productResponse.meta.last_page);
+      setPageFrom(productResponse.meta.from);
+      setPageTo(productResponse.meta.to);
+      setTotalProducts(productResponse.meta.total);
       setCategories(categoryResponse.data);
       pushToast("Admin catalog loaded.");
     } catch (error) {
@@ -90,6 +101,11 @@ export function ProductAdminClient() {
     setSession(null);
     setProducts([]);
     setCategories([]);
+    setCurrentPage(1);
+    setLastPage(1);
+    setPageFrom(null);
+    setPageTo(null);
+    setTotalProducts(0);
     reset(emptyForm);
     setEditingProductId(undefined);
   }
@@ -140,9 +156,14 @@ export function ProductAdminClient() {
         body: JSON.stringify(payload),
       });
 
-      setProducts((items) => items.map((item) => (item.id === optimisticProduct.id ? response.data : item)));
+      if (values.id) {
+        setProducts((items) => items.map((item) => (item.id === optimisticProduct.id ? response.data : item)));
+      } else {
+        await loadData(1);
+      }
       reset(emptyForm);
       setEditingProductId(undefined);
+      setCurrentPage(1);
       pushToast(values.id ? "Product updated." : "Product created.");
     } catch (error) {
       setProducts(previousProducts);
@@ -160,6 +181,8 @@ export function ProductAdminClient() {
 
     try {
       await request(`/products/${product.slug}`, { method: "DELETE" });
+      const nextPage = previousProducts.length === 1 && currentPage > 1 ? currentPage - 1 : currentPage;
+      await loadData(nextPage);
       pushToast("Product deleted.", "success", 5000);
     } catch (error) {
       setProducts(previousProducts);
@@ -201,7 +224,7 @@ export function ProductAdminClient() {
         session={session}
         onAuthenticated={(nextSession) => {
           setSession(nextSession);
-          void loadData(nextSession.token);
+          void loadData(1, nextSession.token);
         }}
         onLogout={logout}
       >
@@ -367,6 +390,15 @@ export function ProductAdminClient() {
             ))}
           </tbody>
         </table>
+        <AdminPagination
+          currentPage={currentPage}
+          lastPage={lastPage}
+          from={pageFrom}
+          to={pageTo}
+          total={totalProducts}
+          isLoading={isLoading}
+          onPageChange={(page) => void loadData(page)}
+        />
       </div>
         </>
       )}

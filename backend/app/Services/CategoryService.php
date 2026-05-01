@@ -21,7 +21,7 @@ class CategoryService
                 $categories = Category::query()
                     ->withCount('products')
                     ->latest()
-                    ->paginate(page: $page);
+                    ->paginate(perPage: CacheKeys::PAGINATION_PER_PAGE, page: $page);
 
                 return CategoryResource::collection($categories)
                     ->response()

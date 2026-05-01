@@ -27,7 +27,7 @@ class ProductService
                         $query->whereHas('category', fn ($categoryQuery) => $categoryQuery->where('slug', $categorySlug));
                     })
                     ->latest()
-                    ->paginate(page: $page);
+                    ->paginate(perPage: CacheKeys::PAGINATION_PER_PAGE, page: $page);
 
                 return ProductResource::collection($products)
                     ->response()

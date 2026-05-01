@@ -4,6 +4,7 @@ namespace App\Support;
 
 class CacheKeys
 {
+    public const PAGINATION_PER_PAGE = 5;
     public const CATEGORY_TTL = 300;
     public const PRODUCT_TTL = 60;
     public const REVIEW_TTL = 60;
