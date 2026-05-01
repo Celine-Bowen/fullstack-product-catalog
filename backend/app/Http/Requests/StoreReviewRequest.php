@@ -23,7 +23,6 @@ class StoreReviewRequest extends FormRequest
             'email' => ['required', 'email', 'max:255'],
             'rating' => ['required', 'integer', 'min:1', 'max:5'],
             'body' => ['required', 'string', 'min:10'],
-            'is_approved' => ['sometimes', 'boolean'],
         ];
     }
 
@@ -45,7 +44,6 @@ class StoreReviewRequest extends FormRequest
             'rating.max' => 'The review rating may not be greater than 5.',
             'body.required' => 'Please provide the review body.',
             'body.min' => 'The review body must be at least 10 characters.',
-            'is_approved.boolean' => 'The approval value must be true or false.',
         ];
     }
 }
