@@ -18,9 +18,11 @@ export default async function ProductsPage({
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <SectionHeader title="Products" eyebrow="Catalog">
-        <Link href="/products" className="text-sm font-semibold text-teal-700 hover:text-teal-900 dark:text-teal-300 dark:hover:text-teal-200">
-          Clear filter
-        </Link>
+        {category ? (
+          <Link href="/products" className="text-sm font-semibold text-teal-700 hover:text-teal-900 dark:text-teal-300 dark:hover:text-teal-200">
+            Clear filter
+          </Link>
+        ) : null}
       </SectionHeader>
 
       <div className="mt-6 flex gap-3 overflow-x-auto pb-2">
