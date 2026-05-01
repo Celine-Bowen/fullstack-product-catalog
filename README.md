@@ -26,6 +26,10 @@ The project is intentionally split around clear ownership boundaries:
 | --- | --- |
 | ![Categories page](docs/screenshots/categories.png) | ![Admin products page](docs/screenshots/admin.png) |
 
+| Admin reviews |
+| --- |
+| ![Admin reviews page](docs/screenshots/review.png) |
+
 ## Quick Start
 
 Prerequisites:
